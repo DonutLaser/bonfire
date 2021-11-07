@@ -49,7 +49,6 @@ func NewItemView(rect sdl.Rect) *ItemView {
 }
 
 func (iv *ItemView) ShowFolder(path string) {
-
 	dir, err := os.Open(path)
 	checkError(err)
 	defer dir.Close()
@@ -127,6 +126,10 @@ func (iv *ItemView) GoOutside() {
 	iv.CurrentPath = strings.Join(split[:len(split)-1], "/")
 
 	iv.ShowFolder(iv.CurrentPath)
+}
+
+func (iv *ItemView) Resize(rect sdl.Rect) {
+	iv.Rect = rect
 }
 
 func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {

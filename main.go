@@ -181,6 +181,10 @@ func main() {
 						input.TypedCharacter = keyToCharacter(keycode, t.Keysym.Mod)
 					}
 				}
+			case *sdl.WindowEvent:
+				if t.Event == sdl.WINDOWEVENT_RESIZED {
+					app.Resize(t.Data1, t.Data2)
+				}
 			}
 		}
 

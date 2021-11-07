@@ -40,6 +40,10 @@ func (b *Breadcrumbs) Pop() string {
 	return result
 }
 
+func (b *Breadcrumbs) Resize(rect sdl.Rect) {
+	b.Rect = rect
+}
+
 func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font) {
 	DrawRect3D(renderer, &b.Rect, b.BackgroundColor)
 

@@ -33,6 +33,11 @@ func NewApp(windowWidth int32, windowHeight int32) (result App) {
 	return
 }
 
+func (app *App) Resize(windowWidth int32, windowHeight int32) {
+	app.Breadcrumbs.Resize(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
+	app.ItemView.Resize(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28})
+}
+
 func (app *App) Tick(input *Input) {
 	if app.Mode == Mode_Drive_Selection {
 		app.handleInputDriveSelection(input)
