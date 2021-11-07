@@ -7,6 +7,23 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// @TODO (!important) marking folders and files as favorite
+// @TODO (!important) open favorite files and folders
+// @TODO (!important) copy files and folders
+// @TODO (!important) group files/folders into a new folder
+// @TODO (!important) search files in the current folder
+// @TODO (!important) remove files and folders
+// @TODO (!important) select multiple files/folders
+// @TODO (!important) simple rename files and folders
+// @TODO (!important) advanced rename files and folders
+// @TODO (!important) show/hide hidden files
+// @TODO (!important) create new file
+// @TODO (!important) create new folder
+// @TODO (!important) custom themes
+// @TODO (!important) experiment with active item showing a border, not a background
+// @TODO (!important) open files
+// @TODO (!important) tag files
+
 type Mode int32
 
 const (
@@ -24,7 +41,6 @@ type App struct {
 	Mode Mode
 }
 
-// @TODO (!important) handle window resizing
 func NewApp(windowWidth int32, windowHeight int32) (result App) {
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
 
@@ -59,6 +75,7 @@ func (app *App) Tick(input *Input) {
 func (app *App) handleInputNormal(input *Input) {
 	if input.Backspace {
 		// @TODO (!important) fix crash when going outside from the root of the drive
+		// @TODO (!important) this should retain the last position so that when you go back, the active item doesn't always become 0
 		app.Breadcrumbs.Pop()
 		app.ItemView.GoOutside()
 		return
