@@ -1,6 +1,8 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/veandco/go-sdl2/ttf"
 )
 
@@ -27,6 +29,20 @@ func LoadFont(path string, size int32) (result Font) {
 
 func (font *Font) GetStringWidth(text string) int32 {
 	return int32(len(text) * font.CharacterWidth)
+}
+
+func (font *Font) ClipString(text string, width int32) string {
+	if font.GetStringWidth(text) <= width {
+		return text
+	}
+
+	maxChars := int(width / int32(font.CharacterWidth))
+
+	var sb strings.Builder
+	sb.WriteString(text[:(maxChars - 3)])
+	sb.WriteString("...")
+
+	return sb.String()
 }
 
 func (font *Font) Unload() {

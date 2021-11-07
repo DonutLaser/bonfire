@@ -21,13 +21,16 @@ type Item struct {
 }
 
 type ItemView struct {
-	Items       []Item
-	ActiveItem  int32
-	CurrentPath string
+	Items        []Item
+	ActiveItem   int32
+	ActiveColumn int32
+	CurrentPath  string
 
-	Rect       sdl.Rect
-	ItemHeight int32
-	ItemWidth  int32
+	Rect              sdl.Rect
+	ItemHeight        int32
+	ItemWidth         int32
+	MaxItemsPerColumn int32
+	Columns           int32
 
 	BackgroundColor sdl.Color
 	FolderColor     sdl.Color
@@ -37,14 +40,16 @@ type ItemView struct {
 
 func NewItemView(rect sdl.Rect) *ItemView {
 	return &ItemView{
-		ActiveItem:      -1,
-		Rect:            rect,
-		ItemHeight:      24,
-		ItemWidth:       394,
-		BackgroundColor: sdl.Color{R: 20, G: 27, B: 39, A: 255},
-		FolderColor:     sdl.Color{R: 254, G: 203, B: 0, A: 255},
-		FileColor:       sdl.Color{R: 216, G: 216, B: 216, A: 255},
-		ActiveItemColor: sdl.Color{R: 44, G: 50, B: 61, A: 255},
+		ActiveItem:        -1,
+		ActiveColumn:      0,
+		Rect:              rect,
+		ItemHeight:        24,
+		ItemWidth:         394,
+		MaxItemsPerColumn: rect.H / 24,
+		BackgroundColor:   sdl.Color{R: 20, G: 27, B: 39, A: 255},
+		FolderColor:       sdl.Color{R: 254, G: 203, B: 0, A: 255},
+		FileColor:         sdl.Color{R: 216, G: 216, B: 216, A: 255},
+		ActiveItemColor:   sdl.Color{R: 44, G: 50, B: 61, A: 255},
 	}
 }
 
@@ -85,6 +90,9 @@ func (iv *ItemView) ShowFolder(path string) {
 	iv.Items = append(iv.Items, folders...)
 	iv.Items = append(iv.Items, files...)
 
+	iv.Columns = int32(len(iv.Items)) / iv.MaxItemsPerColumn
+	iv.Columns++ // Basically ceiling the number
+
 	iv.ActiveItem = 0
 	iv.CurrentPath = path
 }
@@ -98,6 +106,40 @@ func (iv *ItemView) NavigateDown() {
 func (iv *ItemView) NavigateUp() {
 	if iv.ActiveItem > 0 {
 		iv.ActiveItem--
+	}
+}
+
+func (iv *ItemView) NavigateRight() {
+	if iv.ActiveColumn >= iv.Columns {
+		return
+	}
+
+	iv.ActiveColumn++
+
+	if iv.ActiveItem+iv.MaxItemsPerColumn >= int32(len(iv.Items)) {
+		iv.ActiveColumn--
+	} else {
+		iv.ActiveItem += iv.MaxItemsPerColumn
+	}
+}
+
+func (iv *ItemView) NavigateLeft() {
+	if iv.ActiveColumn <= 0 {
+		return
+	}
+
+	iv.ActiveColumn--
+	iv.ActiveItem -= iv.MaxItemsPerColumn
+}
+
+func (iv *ItemView) NavigateFirstInColumn() {
+	iv.ActiveItem = iv.ActiveColumn * iv.MaxItemsPerColumn
+}
+
+func (iv *ItemView) NavigateLastInColumn() {
+	iv.ActiveItem = iv.ActiveColumn*iv.MaxItemsPerColumn + iv.MaxItemsPerColumn - 1
+	if iv.ActiveItem >= int32(len(iv.Items)) {
+		iv.ActiveItem = int32(len(iv.Items) - 1)
 	}
 }
 
@@ -130,6 +172,7 @@ func (iv *ItemView) GoOutside() {
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.Rect = rect
+	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
 }
 
 func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
@@ -138,31 +181,48 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
 	var padding int32 = 10
 	var itemPadding int32 = 5
 
-	for index, item := range iv.Items {
-		rect := sdl.Rect{
-			X: iv.Rect.X + padding,
-			Y: iv.Rect.Y + padding + iv.ItemHeight*int32(index),
-			W: iv.ItemWidth,
-			H: iv.ItemHeight,
+	itemIndex := 0
+	for i := 0; i < int(iv.Columns); i++ {
+		for j := 0; j < int(iv.MaxItemsPerColumn); j++ {
+			if itemIndex >= int(len(iv.Items)) {
+				break
+			}
+
+			item := iv.Items[itemIndex]
+
+			rect := sdl.Rect{
+				X: iv.Rect.X + padding + int32(i)*iv.ItemWidth,
+				Y: iv.Rect.Y + padding + iv.ItemHeight*int32(j),
+				W: iv.ItemWidth,
+				H: iv.ItemHeight,
+			}
+
+			name := item.Name
+			width := font.GetStringWidth(name)
+			if width > iv.ItemWidth {
+				name = font.ClipString(name, iv.ItemWidth-itemPadding*2)
+				width = iv.ItemWidth - itemPadding*2
+			}
+
+			stringRect := sdl.Rect{
+				X: rect.X + itemPadding,
+				Y: rect.Y + (iv.ItemHeight-font.Size)/2,
+				W: width,
+				H: font.Size,
+			}
+
+			color := iv.FileColor
+			if item.Type == Item_Type_Folder {
+				color = iv.FolderColor
+			}
+
+			if itemIndex == int(iv.ActiveItem) {
+				DrawRect(renderer, &rect, iv.ActiveItemColor)
+			}
+			DrawText(renderer, font, name, &stringRect, color)
+
+			itemIndex++
 		}
 
-		width := font.GetStringWidth(item.Name)
-
-		stringRect := sdl.Rect{
-			X: rect.X + itemPadding,
-			Y: rect.Y + (iv.ItemHeight-font.Size)/2,
-			W: width,
-			H: font.Size,
-		}
-
-		color := iv.FileColor
-		if item.Type == Item_Type_Folder {
-			color = iv.FolderColor
-		}
-
-		if index == int(iv.ActiveItem) {
-			DrawRect(renderer, &rect, iv.ActiveItemColor)
-		}
-		DrawText(renderer, font, item.Name, &stringRect, color)
 	}
 }

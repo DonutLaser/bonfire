@@ -26,9 +26,13 @@ type App struct {
 
 // @TODO (!important) handle window resizing
 func NewApp(windowWidth int32, windowHeight int32) (result App) {
+	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
+
 	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
 	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28})
-	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
+
+	result.GoToDrive('D')
+	result.Mode = Mode_Normal
 
 	return
 }
@@ -65,10 +69,16 @@ func (app *App) handleInputNormal(input *Input) {
 		app.Mode = Mode_Drive_Selection
 	case 'g':
 		app.Mode = Mode_Goto
+	case 'h':
+		app.ItemView.NavigateLeft()
 	case 'j':
 		app.ItemView.NavigateDown()
 	case 'k':
 		app.ItemView.NavigateUp()
+	case 'l':
+		app.ItemView.NavigateRight()
+	case 'G':
+		app.ItemView.NavigateLastInColumn()
 	}
 }
 
@@ -77,24 +87,25 @@ func (app *App) handleInputDriveSelection(input *Input) {
 		return
 	}
 
-	if !unicode.IsLetter(rune(input.TypedCharacter)) {
+	if !unicode.IsLetter(rune(input.TypedCharacter)) || input.Escape {
 		app.Mode = Mode_Normal
 		return
 	}
 
-	var sb strings.Builder
-	sb.WriteString(strings.ToUpper(string(input.TypedCharacter)))
-	sb.WriteString(":")
-
-	app.Breadcrumbs.Clear()
-	app.Breadcrumbs.Push(sb.String())
-
-	app.ItemView.ShowFolder(sb.String())
-
+	app.GoToDrive(input.TypedCharacter)
 	app.Mode = Mode_Normal
 }
 
 func (app *App) handleInputGoto(input *Input) {
+	if input.TypedCharacter == 0 {
+		return
+	}
+
+	if input.Escape {
+		app.Mode = Mode_Normal
+		return
+	}
+
 	switch input.TypedCharacter {
 	case 'd':
 		activeFolder := app.ItemView.GoInside()
@@ -103,7 +114,23 @@ func (app *App) handleInputGoto(input *Input) {
 		}
 
 		app.Mode = Mode_Normal
+	case 'g':
+		app.ItemView.NavigateFirstInColumn()
+		app.Mode = Mode_Normal
+	default:
+		app.Mode = Mode_Normal
 	}
+}
+
+func (app *App) GoToDrive(drive byte) {
+	var sb strings.Builder
+	sb.WriteString(strings.ToUpper(string(drive)))
+	sb.WriteString(":")
+
+	app.Breadcrumbs.Clear()
+	app.Breadcrumbs.Push(sb.String())
+
+	app.ItemView.ShowFolder(sb.String())
 }
 
 func (app *App) Render(renderer *sdl.Renderer) {
