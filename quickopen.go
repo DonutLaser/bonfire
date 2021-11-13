@@ -7,12 +7,13 @@ import (
 )
 
 type QuickOpen struct {
-	IsOpen      bool
-	MaxItems    int32
-	ItemsToShow int32 // Actual count of items we will show. Will never be more than MaxItems.
-	Items       []string
-	ActiveItem  int32
-	Results     []string
+	IsOpen            bool
+	MaxItems          int32
+	ItemsToShow       int32 // Actual count of items we will show. Will never be more than MaxItems.
+	Items             []string
+	ActiveItem        int32
+	Results           []string
+	ActiveItemChanged bool
 
 	InputField *InputField
 	OnSubmit   func(string)
@@ -107,13 +108,18 @@ func (q *QuickOpen) Tick(input *Input) {
 		if input.TypedCharacter == 'j' {
 			if q.ActiveItem < q.ItemsToShow-1 {
 				q.ActiveItem++
+				q.ActiveItemChanged = true
 			}
 		} else if input.TypedCharacter == 'k' {
 			if q.ActiveItem > 0 {
 				q.ActiveItem--
+				q.ActiveItemChanged = true
 			}
 		}
 
+		return
+	} else if q.ActiveItemChanged {
+		q.Submit()
 		return
 	}
 
