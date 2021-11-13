@@ -41,10 +41,11 @@ func (i *InputField) Tick(input *Input) {
 		if input.Ctrl {
 			i.Value.Reset()
 		} else {
-			// @TODO (!important) fix crash when string is already empty
-			currentValue := i.Value.String()
-			i.Value.Reset()
-			i.Value.WriteString(currentValue[:len(currentValue)-1])
+			if i.Value.Len() > 0 {
+				currentValue := i.Value.String()
+				i.Value.Reset()
+				i.Value.WriteString(currentValue[:len(currentValue)-1])
+			}
 		}
 
 		i.OnInput()
