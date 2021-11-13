@@ -13,10 +13,6 @@ type InputField struct {
 	Rect             sdl.Rect
 	BasePadding      int32
 	InputAreaPadding int32
-
-	BackgroundColor sdl.Color
-	TextColor       sdl.Color
-	CursorColor     sdl.Color
 }
 
 func NewInputField(rect sdl.Rect, onInput func(string)) *InputField {
@@ -25,9 +21,6 @@ func NewInputField(rect sdl.Rect, onInput func(string)) *InputField {
 		Rect:             rect,
 		BasePadding:      8,
 		InputAreaPadding: 10,
-		BackgroundColor:  sdl.Color{R: 20, G: 27, B: 39, A: 255},
-		TextColor:        sdl.Color{R: 216, G: 216, B: 216, A: 255},
-		CursorColor:      sdl.Color{R: 254, G: 203, B: 0, A: 255},
 	}
 }
 
@@ -64,8 +57,8 @@ func (i *InputField) Tick(input *Input) {
 	}
 }
 
-func (i *InputField) Render(renderer *sdl.Renderer, x int32, y int32, font *Font) {
-	DrawRect3D(renderer, &sdl.Rect{X: x, Y: y, W: i.Rect.W, H: i.Rect.H}, i.BackgroundColor)
+func (i *InputField) Render(renderer *sdl.Renderer, x int32, y int32, font *Font, theme Subtheme) {
+	DrawRect3D(renderer, &sdl.Rect{X: x, Y: y, W: i.Rect.W, H: i.Rect.H}, GetColor(theme, "background_color"))
 
 	value := i.Value.String()
 	textWidth := font.GetStringWidth(value)
@@ -79,9 +72,9 @@ func (i *InputField) Render(renderer *sdl.Renderer, x int32, y int32, font *Font
 	cursorRect := textRect
 	cursorRect.X += textRect.W
 	cursorRect.W = 2
-	DrawRect(renderer, &cursorRect, i.CursorColor)
+	DrawRect(renderer, &cursorRect, GetColor(theme, "cursor_color"))
 
 	if textWidth > 0 {
-		DrawText(renderer, font, i.Value.String(), &textRect, i.TextColor)
+		DrawText(renderer, font, i.Value.String(), &textRect, GetColor(theme, "text_color"))
 	}
 }

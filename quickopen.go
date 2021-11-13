@@ -21,25 +21,18 @@ type QuickOpen struct {
 	BasePadding   int32
 	InsidePadding int32
 	ItemHeight    int32
-
-	BackgroundColor           sdl.Color
-	ItemColor                 sdl.Color
-	ActiveItemBackgroundColor sdl.Color
 }
 
 func NewQuickOpen(rect sdl.Rect) *QuickOpen {
 	return &QuickOpen{
-		MaxItems:                  5,
-		ItemsToShow:               0,
-		InputField:                nil,
-		OnSubmit:                  nil,
-		Rect:                      rect,
-		BasePadding:               8,
-		InsidePadding:             5,
-		ItemHeight:                24,
-		BackgroundColor:           sdl.Color{R: 20, G: 27, B: 39, A: 255},
-		ItemColor:                 sdl.Color{R: 216, G: 216, B: 216, A: 255},
-		ActiveItemBackgroundColor: sdl.Color{R: 44, G: 50, B: 61, A: 255},
+		MaxItems:      5,
+		ItemsToShow:   0,
+		InputField:    nil,
+		OnSubmit:      nil,
+		Rect:          rect,
+		BasePadding:   8,
+		InsidePadding: 5,
+		ItemHeight:    24,
 	}
 }
 
@@ -132,8 +125,8 @@ func (q *QuickOpen) Tick(input *Input) {
 	q.InputField.Tick(input)
 }
 
-func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *Font) {
-	q.InputField.Render(renderer, parentRect.X+(parentRect.W-q.Rect.W)/2, parentRect.Y+100, font)
+func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *Font, theme Subtheme, inputFieldTheme Subtheme) {
+	q.InputField.Render(renderer, parentRect.X+(parentRect.W-q.Rect.W)/2, parentRect.Y+100, font, inputFieldTheme)
 
 	baseRect := sdl.Rect{
 		X: parentRect.X + (parentRect.W-q.Rect.W)/2,
@@ -141,7 +134,7 @@ func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *F
 		W: q.Rect.W,
 		H: q.BasePadding*2 + q.ItemsToShow*q.ItemHeight,
 	}
-	DrawRect3D(renderer, &baseRect, q.BackgroundColor)
+	DrawRect3D(renderer, &baseRect, GetColor(theme, "background_color"))
 
 	for i := 0; i < int(q.ItemsToShow); i++ {
 		baseItemRect := sdl.Rect{
@@ -151,8 +144,10 @@ func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *F
 			H: q.ItemHeight,
 		}
 
+		textColor := GetColor(theme, "item_color")
 		if i == int(q.ActiveItem) {
-			DrawRect(renderer, &baseItemRect, q.ActiveItemBackgroundColor)
+			DrawRect(renderer, &baseItemRect, GetColor(theme, "active_item_background_color"))
+			textColor = GetColor(theme, "active_item_color")
 		}
 
 		value := q.Results[i]
@@ -163,6 +158,6 @@ func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *F
 			W: textWidth,
 			H: font.Size,
 		}
-		DrawText(renderer, font, value, &textRect, q.ItemColor)
+		DrawText(renderer, font, value, &textRect, textColor)
 	}
 }

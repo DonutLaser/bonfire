@@ -35,12 +35,7 @@ type ItemView struct {
 	MaxItemsPerColumn int32
 	Columns           int32
 
-	BackgroundColor   sdl.Color
-	FolderColor       sdl.Color
-	FileColor         sdl.Color
-	ActiveItemColor   sdl.Color
-	FavoriteIconColor sdl.Color
-	FavoriteIcon      *Image
+	FavoriteIcon *Image
 }
 
 func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
@@ -51,11 +46,6 @@ func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
 		ItemHeight:        24,
 		ItemWidth:         394,
 		MaxItemsPerColumn: rect.H / 24,
-		BackgroundColor:   sdl.Color{R: 20, G: 27, B: 39, A: 255},
-		FolderColor:       sdl.Color{R: 254, G: 203, B: 0, A: 255},
-		FileColor:         sdl.Color{R: 216, G: 216, B: 216, A: 255},
-		ActiveItemColor:   sdl.Color{R: 44, G: 50, B: 61, A: 255},
-		FavoriteIconColor: sdl.Color{R: 254, G: 108, B: 0, A: 255},
 		FavoriteIcon:      favoriteIcon,
 	}
 }
@@ -195,8 +185,8 @@ func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
 }
 
-func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
-	DrawRect3D(renderer, &iv.Rect, iv.BackgroundColor)
+func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font, theme Subtheme) {
+	DrawRect3D(renderer, &iv.Rect, GetColor(theme, "background_color"))
 
 	var padding int32 = 10
 	var itemPadding int32 = 5
@@ -231,13 +221,18 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
 				H: font.Size,
 			}
 
-			color := iv.FileColor
+			color := GetColor(theme, "file_color")
 			if item.Type == Item_Type_Folder {
-				color = iv.FolderColor
+				color = GetColor(theme, "folder_color")
 			}
 
 			if itemIndex == int(iv.ActiveItem) {
-				DrawRect(renderer, &rect, iv.ActiveItemColor)
+				DrawRect(renderer, &rect, GetColor(theme, "active_background_color"))
+
+				color = GetColor(theme, "active_file_color")
+				if item.Type == Item_Type_Folder {
+					color = GetColor(theme, "active_folder_color")
+				}
 			}
 			DrawText(renderer, font, name, &stringRect, color)
 
@@ -249,7 +244,7 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
 					H: iv.FavoriteIcon.Height,
 				}
 
-				DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, iv.FavoriteIconColor)
+				DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, GetColor(theme, "favorite_icon_color"))
 			}
 
 			itemIndex++

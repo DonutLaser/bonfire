@@ -35,7 +35,8 @@ const (
 )
 
 type App struct {
-	Font       Font
+	Font Font
+	Theme
 	WindowRect sdl.Rect
 
 	Breadcrumbs
@@ -47,6 +48,7 @@ type App struct {
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result App) {
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
+	result.Theme = *LoadTheme("default")
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
@@ -109,6 +111,7 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) ctrl + g to put selected items into a new folder
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) r to change an extension
+	// @TODO (!important) M to mark the parent folder as favorite
 
 	if input.Backspace {
 		// @TODO (!important) fix crash when going outside from the root of the drive
@@ -204,12 +207,12 @@ func (app *App) Render(renderer *sdl.Renderer) {
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.Clear()
 
-	app.Breadcrumbs.Render(renderer, &app.Font)
-	app.ItemView.Render(renderer, &app.Font)
+	app.Breadcrumbs.Render(renderer, &app.Font, app.Theme.BreadcrumbsTheme)
+	app.ItemView.Render(renderer, &app.Font, app.Theme.ItemViewTheme)
 
 	if app.QuickOpen.IsOpen {
 		DrawRectTransparent(renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
-		app.QuickOpen.Render(renderer, &app.ItemView.Rect, &app.Font)
+		app.QuickOpen.Render(renderer, &app.ItemView.Rect, &app.Font, app.Theme.QuickOpenTheme, app.Theme.InputFieldTheme)
 	}
 
 	renderer.Present()

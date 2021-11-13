@@ -1,0 +1,24 @@
+@Breadcrumbs
+background_color = 20 27 39
+path_color = 254 203 0
+separator_color = 216 216 216 
+
+@ItemView
+background_color = 20 27 39
+folder_color = 254 203 0
+file_color = 216 216 216
+active_folder_color = 254 203 0
+active_file_color = 216 216 216
+active_background_color = 44 50 61
+favorite_icon_color = 254 108 0
+
+@InputField
+background_color = 20 27 39
+text_color = 216 216 216
+cursor_color = 254 203 0
+
+@QuickOpen
+background_color = 20 27 39
+item_color = 216 216 216
+active_item_color = 216 216 216
+active_item_background_color = 44 50 61

@@ -10,19 +10,12 @@ type Breadcrumbs struct {
 	Path []string
 
 	Rect sdl.Rect
-
-	BackgroundColor sdl.Color
-	PathColor       sdl.Color
-	JoinColor       sdl.Color
 }
 
 func NewBreadcrumbs(rect sdl.Rect) *Breadcrumbs {
 	return &Breadcrumbs{
-		Path:            []string{},
-		Rect:            rect,
-		BackgroundColor: sdl.Color{R: 20, G: 27, B: 39, A: 255},
-		PathColor:       sdl.Color{R: 254, G: 203, B: 0, A: 255},
-		JoinColor:       sdl.Color{R: 216, G: 216, B: 216, A: 255},
+		Path: []string{},
+		Rect: rect,
 	}
 }
 
@@ -48,8 +41,8 @@ func (b *Breadcrumbs) Resize(rect sdl.Rect) {
 	b.Rect = rect
 }
 
-func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font) {
-	DrawRect3D(renderer, &b.Rect, b.BackgroundColor)
+func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font, theme Subtheme) {
+	DrawRect3D(renderer, &b.Rect, GetColor(theme, "background_color"))
 
 	if len(b.Path) > 0 {
 		fullPath := strings.Join(b.Path, " > ")
@@ -63,9 +56,9 @@ func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font) {
 		for index, path := range b.Path {
 			width := font.GetStringWidth(path)
 
-			DrawText(renderer, font, path, &sdl.Rect{X: cursorX, Y: cursorY, W: width, H: font.Size}, b.PathColor)
+			DrawText(renderer, font, path, &sdl.Rect{X: cursorX, Y: cursorY, W: width, H: font.Size}, GetColor(theme, "path_color"))
 			if index < len(b.Path)-1 {
-				DrawText(renderer, font, " > ", &sdl.Rect{X: cursorX + width, Y: cursorY, W: joinWidth, H: font.Size}, b.JoinColor)
+				DrawText(renderer, font, " > ", &sdl.Rect{X: cursorX + width, Y: cursorY, W: joinWidth, H: font.Size}, GetColor(theme, "separator_color"))
 				cursorX += joinWidth
 			}
 
