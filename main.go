@@ -141,7 +141,7 @@ func main() {
 
 	windowWidth, windowHeight := window.GetSize()
 
-	app := NewApp(windowWidth, windowHeight)
+	app := NewApp(renderer, windowWidth, windowHeight)
 	input := Input{}
 
 	running := true
@@ -191,4 +191,6 @@ func main() {
 		app.Tick(&input)
 		app.Render(renderer)
 	}
+
+	app.Close()
 }

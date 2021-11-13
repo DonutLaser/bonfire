@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path"
 	"sort"
 	"strings"
 
@@ -16,8 +17,9 @@ const (
 )
 
 type Item struct {
-	Type ItemType
-	Name string
+	Type       ItemType
+	Name       string
+	IsFavorite bool
 }
 
 type ItemView struct {
@@ -25,6 +27,7 @@ type ItemView struct {
 	ActiveItem   int32
 	ActiveColumn int32
 	CurrentPath  string
+	Favorites    []string
 
 	Rect              sdl.Rect
 	ItemHeight        int32
@@ -32,13 +35,15 @@ type ItemView struct {
 	MaxItemsPerColumn int32
 	Columns           int32
 
-	BackgroundColor sdl.Color
-	FolderColor     sdl.Color
-	FileColor       sdl.Color
-	ActiveItemColor sdl.Color
+	BackgroundColor   sdl.Color
+	FolderColor       sdl.Color
+	FileColor         sdl.Color
+	ActiveItemColor   sdl.Color
+	FavoriteIconColor sdl.Color
+	FavoriteIcon      *Image
 }
 
-func NewItemView(rect sdl.Rect) *ItemView {
+func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
 	return &ItemView{
 		ActiveItem:        -1,
 		ActiveColumn:      0,
@@ -50,11 +55,17 @@ func NewItemView(rect sdl.Rect) *ItemView {
 		FolderColor:       sdl.Color{R: 254, G: 203, B: 0, A: 255},
 		FileColor:         sdl.Color{R: 216, G: 216, B: 216, A: 255},
 		ActiveItemColor:   sdl.Color{R: 44, G: 50, B: 61, A: 255},
+		FavoriteIconColor: sdl.Color{R: 254, G: 108, B: 0, A: 255},
+		FavoriteIcon:      favoriteIcon,
 	}
 }
 
-func (iv *ItemView) ShowFolder(path string) {
-	dir, err := os.Open(path)
+func (iv *ItemView) Close() {
+	iv.FavoriteIcon.Unload()
+}
+
+func (iv *ItemView) ShowFolder(fullPath string) {
+	dir, err := os.Open(fullPath)
 	checkError(err)
 	defer dir.Close()
 
@@ -90,11 +101,16 @@ func (iv *ItemView) ShowFolder(path string) {
 	iv.Items = append(iv.Items, folders...)
 	iv.Items = append(iv.Items, files...)
 
+	for index, item := range iv.Items {
+		p := path.Join(fullPath, item.Name)
+		iv.Items[index].IsFavorite = IndexOf(iv.Favorites, p) >= 0
+	}
+
 	iv.Columns = int32(len(iv.Items)) / iv.MaxItemsPerColumn
 	iv.Columns++ // Basically ceiling the number
 
 	iv.ActiveItem = 0
-	iv.CurrentPath = path
+	iv.CurrentPath = fullPath
 }
 
 func (iv *ItemView) NavigateDown() {
@@ -150,14 +166,8 @@ func (iv *ItemView) GoInside() (result string) {
 
 	item := iv.Items[iv.ActiveItem]
 	if item.Type == Item_Type_Folder {
-		// @TODO (!important) write custom path functions
-		var sb strings.Builder
-		sb.WriteString(iv.CurrentPath)
-		sb.WriteString("/")
-		sb.WriteString(item.Name)
-
 		result = item.Name
-		iv.ShowFolder(sb.String())
+		iv.ShowFolder(path.Join(iv.CurrentPath, item.Name))
 	}
 
 	return
@@ -168,6 +178,16 @@ func (iv *ItemView) GoOutside() {
 	iv.CurrentPath = strings.Join(split[:len(split)-1], "/")
 
 	iv.ShowFolder(iv.CurrentPath)
+}
+
+func (iv *ItemView) MarkActiveAsFavorite() {
+	if iv.Items[iv.ActiveItem].IsFavorite {
+		iv.Items[iv.ActiveItem].IsFavorite = false
+		iv.Favorites = Remove(iv.Favorites, iv.Items[iv.ActiveItem].Name)
+	} else {
+		iv.Favorites = append(iv.Favorites, path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
+		iv.Items[iv.ActiveItem].IsFavorite = true
+	}
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -220,6 +240,17 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font) {
 				DrawRect(renderer, &rect, iv.ActiveItemColor)
 			}
 			DrawText(renderer, font, name, &stringRect, color)
+
+			if item.IsFavorite {
+				iconRect := sdl.Rect{
+					X: rect.X + rect.W - (itemPadding + iv.FavoriteIcon.Width),
+					Y: rect.Y + (iv.ItemHeight-iv.FavoriteIcon.Height)/2,
+					W: iv.FavoriteIcon.Width,
+					H: iv.FavoriteIcon.Height,
+				}
+
+				DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, iv.FavoriteIconColor)
+			}
 
 			itemIndex++
 		}

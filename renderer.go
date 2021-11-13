@@ -39,34 +39,38 @@ func DrawRect3D(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 		A: 255,
 	}
 
-	// @TODO (!important) utility function to get inside border rects of rect
-	// Draw top and left highlights
+	DrawRectHighlight(renderer, rect, highlight, 1)
+	DrawRectShadow(renderer, rect, shadow, 1)
+}
+
+func DrawRectHighlight(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color, size int32) {
 	DrawRect(renderer, &sdl.Rect{ // Top
 		X: rect.X,
 		Y: rect.Y,
 		W: rect.W,
-		H: 1,
-	}, highlight)
+		H: size,
+	}, color)
 	DrawRect(renderer, &sdl.Rect{ // Left
 		X: rect.X,
 		Y: rect.Y,
-		W: 1,
+		W: size,
 		H: rect.H,
-	}, highlight)
+	}, color)
+}
 
-	// Draw right and bottom shadows
+func DrawRectShadow(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color, size int32) {
 	DrawRect(renderer, &sdl.Rect{ // Right
-		X: rect.X + rect.W - 1,
+		X: rect.X + rect.W - size,
 		Y: rect.Y,
-		W: 1,
+		W: size,
 		H: rect.H,
-	}, shadow)
+	}, color)
 	DrawRect(renderer, &sdl.Rect{ // Bottom
 		X: rect.X,
-		Y: rect.Y + rect.H - 1,
+		Y: rect.Y + rect.H - size,
 		W: rect.W,
-		H: 1,
-	}, shadow)
+		H: size,
+	}, color)
 }
 
 func DrawImage(renderer *sdl.Renderer, texture *sdl.Texture, rect sdl.Rect, color sdl.Color) {
