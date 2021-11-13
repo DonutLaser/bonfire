@@ -95,8 +95,6 @@ func (app *App) Tick(input *Input) {
 }
 
 func (app *App) handleInputNormal(input *Input) {
-	// @TODO (!important) ctrl + alt + p to open one of the favorite items
-	// @TODO (!important) ctrl + p to open one of the items in the current folder
 	// @TODO (!important) c to rename an item
 	// @TODO (!important) C to advanded rename a group of selected items
 	// @TODO (!important) v to select a single item
