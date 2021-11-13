@@ -128,6 +128,10 @@ func (q *QuickOpen) Tick(input *Input) {
 func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *Font, theme Subtheme, inputFieldTheme Subtheme) {
 	q.InputField.Render(renderer, parentRect.X+(parentRect.W-q.Rect.W)/2, parentRect.Y+100, font, inputFieldTheme)
 
+	if q.ItemsToShow == 0 {
+		return
+	}
+
 	baseRect := sdl.Rect{
 		X: parentRect.X + (parentRect.W-q.Rect.W)/2,
 		Y: parentRect.Y + 100 + q.InputField.Rect.H,
