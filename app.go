@@ -24,6 +24,7 @@ import (
 // @TODO (!important) tag files
 // @TODO (!important) w: opens this project folder immediatelly
 // @TODO have icons next to files/folders
+// @TODO (!important) lazy initialize compnents that are not needed right away
 
 type Mode int32
 
@@ -34,20 +35,26 @@ const (
 )
 
 type App struct {
-	Font Font
+	Font       Font
+	WindowRect sdl.Rect
 
-	Breadcrumbs Breadcrumbs
-	ItemView    ItemView
+	Breadcrumbs
+	ItemView
+	QuickOpen
 
 	Mode Mode
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result App) {
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
+	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
+
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
 
 	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
 	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon)
+	// Only the width matters here, because the position is relative to parent component and height is dynamic
+	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
@@ -60,11 +67,18 @@ func (app *App) Close() {
 }
 
 func (app *App) Resize(windowWidth int32, windowHeight int32) {
+	app.WindowRect.W = windowWidth
+	app.WindowRect.H = windowHeight
 	app.Breadcrumbs.Resize(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
 	app.ItemView.Resize(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28})
 }
 
 func (app *App) Tick(input *Input) {
+	if app.QuickOpen.IsOpen {
+		app.QuickOpen.Tick(input)
+		return
+	}
+
 	if app.Mode == Mode_Drive_Selection {
 		app.handleInputDriveSelection(input)
 		return
@@ -121,6 +135,12 @@ func (app *App) handleInputNormal(input *Input) {
 		app.ItemView.NavigateLastInColumn()
 	case 'm':
 		app.ItemView.MarkActiveAsFavorite()
+	case 'p':
+		if input.Ctrl && input.Alt {
+			app.QuickOpen.Open(app.ItemView.Favorites, func(value string) {
+				app.GoToDirectory(value)
+			})
+		}
 	}
 }
 
@@ -175,12 +195,22 @@ func (app *App) GoToDrive(drive byte) {
 	app.ItemView.ShowFolder(sb.String())
 }
 
+func (app *App) GoToDirectory(fullPath string) {
+	app.Breadcrumbs.Set(fullPath)
+	app.ItemView.ShowFolder(fullPath)
+}
+
 func (app *App) Render(renderer *sdl.Renderer) {
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.Clear()
 
 	app.Breadcrumbs.Render(renderer, &app.Font)
 	app.ItemView.Render(renderer, &app.Font)
+
+	if app.QuickOpen.IsOpen {
+		DrawRectTransparent(renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
+		app.QuickOpen.Render(renderer, &app.ItemView.Rect, &app.Font)
+	}
 
 	renderer.Present()
 }

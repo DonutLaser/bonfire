@@ -21,6 +21,15 @@ func DrawRect(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	renderer.FillRect(rect)
 }
 
+func DrawRectTransparent(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
+
+	renderer.SetDrawColor(color.R, color.G, color.B, color.A)
+	renderer.FillRect(rect)
+
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_NONE)
+}
+
 func DrawRect3D(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	DrawRect(renderer, rect, color)
 

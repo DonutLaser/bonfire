@@ -40,6 +40,10 @@ func (b *Breadcrumbs) Pop() string {
 	return result
 }
 
+func (b *Breadcrumbs) Set(fullPath string) {
+	b.Path = strings.Split(fullPath, "/")
+}
+
 func (b *Breadcrumbs) Resize(rect sdl.Rect) {
 	b.Rect = rect
 }
