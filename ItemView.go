@@ -183,7 +183,7 @@ func (iv *ItemView) GoOutside() {
 func (iv *ItemView) MarkActiveAsFavorite() {
 	if iv.Items[iv.ActiveItem].IsFavorite {
 		iv.Items[iv.ActiveItem].IsFavorite = false
-		iv.Favorites = Remove(iv.Favorites, iv.Items[iv.ActiveItem].Name)
+		iv.Favorites = Remove(iv.Favorites, path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 	} else {
 		iv.Favorites = append(iv.Favorites, path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 		iv.Items[iv.ActiveItem].IsFavorite = true
