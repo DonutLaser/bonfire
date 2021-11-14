@@ -96,22 +96,26 @@ func (app *App) Tick(input *Input) {
 }
 
 func (app *App) handleInputNormal(input *Input) {
-	// @TODO (!important) c to rename an item
-	// @TODO (!important) C to advanded rename a group of selected items
+	// @TODO (!important) R to advanded rename a group of selected items
 	// @TODO (!important) v to select a single item
 	// @TODO (!important) V to start group selection
 	// @TODO (!important) y to copy an item
 	// @TODO (!important) p to paste an item
 	// @TODO (!important) P to paste an item contents (files if copying folder or file contents if copying a file)
-	// @TODO (!important) x to delete an item
 	// @TODO (!important) / to search for an item in the current folder
 	// @TODO (!important) i to create a new file
 	// @TODO (!important) I to create a new folder
 	// @TODO (!important) ctrl + g to put selected items into a new folder
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
-	// @TODO (!important) r to change an extension
+	// @TODO (!important) c to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
+
+	app.ItemView.Tick(input)
+
+	if app.ItemView.ConsumingInput {
+		return
+	}
 
 	if input.Backspace {
 		// @TODO (!important) fix crash when going outside from the root of the drive
@@ -126,20 +130,6 @@ func (app *App) handleInputNormal(input *Input) {
 		app.Mode = Mode_Drive_Selection
 	case 'g':
 		app.Mode = Mode_Goto
-	case 'h':
-		app.ItemView.NavigateLeft()
-	case 'j':
-		app.ItemView.NavigateDown()
-	case 'k':
-		app.ItemView.NavigateUp()
-	case 'l':
-		app.ItemView.NavigateRight()
-	case 'G':
-		app.ItemView.NavigateLastInColumn()
-	case 'm':
-		app.ItemView.MarkActiveAsFavorite()
-	case 'x':
-		app.ItemView.DeleteActive()
 	case 'p':
 		if input.Ctrl && input.Alt {
 			app.QuickOpen.Open(app.ItemView.Favorites, func(value string) {
@@ -213,7 +203,7 @@ func (app *App) Render(renderer *sdl.Renderer) {
 	renderer.Clear()
 
 	app.Breadcrumbs.Render(renderer, &app.Font, app.Theme.BreadcrumbsTheme)
-	app.ItemView.Render(renderer, &app.Font, app.Theme.ItemViewTheme)
+	app.ItemView.Render(renderer, app)
 
 	if app.QuickOpen.IsOpen {
 		DrawRectTransparent(renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})

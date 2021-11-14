@@ -17,9 +17,10 @@ const (
 )
 
 type Item struct {
-	Type       ItemType
-	Name       string
-	IsFavorite bool
+	Type             ItemType
+	Name             string
+	IsFavorite       bool
+	RenameInProgress bool
 }
 
 type ItemView struct {
@@ -35,7 +36,9 @@ type ItemView struct {
 	MaxItemsPerColumn int32
 	Columns           int32
 
-	FavoriteIcon *Image
+	FavoriteIcon   *Image
+	Input          *InlineInputField
+	ConsumingInput bool
 }
 
 func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
@@ -47,6 +50,7 @@ func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
 		ItemWidth:         394,
 		MaxItemsPerColumn: rect.H / 24,
 		FavoriteIcon:      favoriteIcon,
+		Input:             NewInlineInputField(),
 	}
 }
 
@@ -192,13 +196,60 @@ func (iv *ItemView) DeleteActive() {
 	iv.ShowFolder(iv.CurrentPath)
 }
 
+func (iv *ItemView) RenameActive() {
+	iv.Items[iv.ActiveItem].RenameInProgress = true
+	iv.ConsumingInput = true
+
+	iv.Input.Open(iv.Items[iv.ActiveItem].Name, func(value string) {
+		oldName := iv.Items[iv.ActiveItem].Name
+		iv.Items[iv.ActiveItem].Name = value
+		iv.Items[iv.ActiveItem].RenameInProgress = false
+		iv.ConsumingInput = false
+
+		err := os.Rename(path.Join(iv.CurrentPath, oldName), path.Join(iv.CurrentPath, value))
+		checkError(err)
+	}, func() {
+		iv.Items[iv.ActiveItem].RenameInProgress = false
+		iv.ConsumingInput = false
+	})
+}
+
 func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.Rect = rect
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
 }
 
-func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font, theme Subtheme) {
-	DrawRect3D(renderer, &iv.Rect, GetColor(theme, "background_color"))
+func (iv *ItemView) Tick(input *Input) {
+	if iv.Input.IsOpen {
+		iv.Input.Tick(input)
+		return
+	}
+
+	switch input.TypedCharacter {
+	case 'h':
+		iv.NavigateLeft()
+	case 'j':
+		iv.NavigateDown()
+	case 'k':
+		iv.NavigateUp()
+	case 'l':
+		iv.NavigateRight()
+	case 'G':
+		iv.NavigateLastInColumn()
+	case 'm':
+		iv.MarkActiveAsFavorite()
+	case 'x':
+		iv.DeleteActive()
+	case 'r':
+		iv.RenameActive()
+	}
+}
+
+func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
+	ivTheme := app.Theme.ItemViewTheme
+	ifTheme := app.Theme.InputFieldTheme
+
+	DrawRect3D(renderer, &iv.Rect, GetColor(ivTheme, "background_color"))
 
 	var padding int32 = 10
 	var itemPadding int32 = 5
@@ -219,48 +270,54 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, font *Font, theme Subtheme) {
 				H: iv.ItemHeight,
 			}
 
-			name := item.Name
-			width := font.GetStringWidth(name)
-			if width > iv.ItemWidth {
-				name = font.ClipString(name, iv.ItemWidth-itemPadding*2)
-				width = iv.ItemWidth - itemPadding*2
-			}
+			font := app.Font
 
-			stringRect := sdl.Rect{
-				X: rect.X + itemPadding,
-				Y: rect.Y + (iv.ItemHeight-font.Size)/2,
-				W: width,
-				H: font.Size,
-			}
+			if item.RenameInProgress {
+				iv.Input.Render(renderer, rect, &font, ifTheme)
+			} else {
 
-			color := GetColor(theme, "file_color")
-			if item.Type == Item_Type_Folder {
-				color = GetColor(theme, "folder_color")
-			}
+				name := item.Name
+				width := font.GetStringWidth(name)
+				if width > iv.ItemWidth {
+					name = font.ClipString(name, iv.ItemWidth-itemPadding*2)
+					width = iv.ItemWidth - itemPadding*2
+				}
 
-			if itemIndex == int(iv.ActiveItem) {
-				DrawRect(renderer, &rect, GetColor(theme, "active_background_color"))
+				stringRect := sdl.Rect{
+					X: rect.X + itemPadding,
+					Y: rect.Y + (iv.ItemHeight-font.Size)/2,
+					W: width,
+					H: font.Size,
+				}
 
-				color = GetColor(theme, "active_file_color")
+				color := GetColor(ivTheme, "file_color")
 				if item.Type == Item_Type_Folder {
-					color = GetColor(theme, "active_folder_color")
-				}
-			}
-			DrawText(renderer, font, name, &stringRect, color)
-
-			if item.IsFavorite {
-				iconRect := sdl.Rect{
-					X: rect.X + rect.W - (itemPadding + iv.FavoriteIcon.Width),
-					Y: rect.Y + (iv.ItemHeight-iv.FavoriteIcon.Height)/2,
-					W: iv.FavoriteIcon.Width,
-					H: iv.FavoriteIcon.Height,
+					color = GetColor(ivTheme, "folder_color")
 				}
 
-				DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, GetColor(theme, "favorite_icon_color"))
+				if itemIndex == int(iv.ActiveItem) {
+					DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
+
+					color = GetColor(ivTheme, "active_file_color")
+					if item.Type == Item_Type_Folder {
+						color = GetColor(ivTheme, "active_folder_color")
+					}
+				}
+				DrawText(renderer, &font, name, &stringRect, color)
+
+				if item.IsFavorite {
+					iconRect := sdl.Rect{
+						X: rect.X + rect.W - (itemPadding + iv.FavoriteIcon.Width),
+						Y: rect.Y + (iv.ItemHeight-iv.FavoriteIcon.Height)/2,
+						W: iv.FavoriteIcon.Width,
+						H: iv.FavoriteIcon.Height,
+					}
+
+					DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, GetColor(ivTheme, "favorite_icon_color"))
+				}
 			}
 
 			itemIndex++
 		}
-
 	}
 }
