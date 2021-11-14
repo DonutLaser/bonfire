@@ -49,6 +49,28 @@ func DrawRect3D(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	DrawRectShadow(renderer, rect, shadow, 1)
 }
 
+func DrawRect3DInset(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
+	DrawRect(renderer, rect, color)
+
+	// @TODO (!important) use theme
+	highlight := sdl.Color{
+		R: 10,
+		G: 13,
+		B: 19,
+		A: 255,
+	}
+
+	shadow := sdl.Color{
+		R: 44,
+		G: 50,
+		B: 61,
+		A: 255,
+	}
+
+	DrawRectHighlight(renderer, rect, highlight, 1)
+	DrawRectShadow(renderer, rect, shadow, 1)
+}
+
 func DrawRectHighlight(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color, size int32) {
 	DrawRect(renderer, &sdl.Rect{ // Top
 		X: rect.X,

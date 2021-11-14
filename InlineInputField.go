@@ -6,6 +6,8 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// @TODO (!important) this should be controlled like vim
+
 type InlineInputField struct {
 	Value strings.Builder
 
@@ -82,7 +84,7 @@ func (i *InlineInputField) Tick(input *Input) {
 }
 
 func (i *InlineInputField) Render(renderer *sdl.Renderer, rect sdl.Rect, font *Font, theme Subtheme) {
-	DrawRect3D(renderer, &rect, GetColor(theme, "background_color"))
+	DrawRect3DInset(renderer, &rect, GetColor(theme, "inset_color"))
 
 	value := i.Value.String()
 	textWidth := font.GetStringWidth(value)

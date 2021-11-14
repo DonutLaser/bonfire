@@ -14,6 +14,7 @@ favorite_icon_color = 254 108 0
 
 @InputField
 background_color = 20 27 39
+inset_color = 15 20 30 
 text_color = 216 216 216
 cursor_color = 254 203 0
 
