@@ -180,6 +180,18 @@ func (iv *ItemView) MarkActiveAsFavorite() {
 	}
 }
 
+func (iv *ItemView) DeleteActive() {
+	if iv.ActiveItem < 0 || iv.ActiveItem >= int32(len(iv.Items)) {
+		return
+	}
+
+	err := os.Remove(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
+	checkError(err)
+
+	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
+	iv.ShowFolder(iv.CurrentPath)
+}
+
 func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.Rect = rect
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight

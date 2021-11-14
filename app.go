@@ -22,9 +22,10 @@ import (
 // @TODO (!important) custom themes
 // @TODO (!important) open files
 // @TODO (!important) tag files
-// @TODO (!important) w: opens this project folder immediatelly
 // @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
+// @TODO (!important) make sure changes in the directory that are made outside the app are automatically reflected in the app
+// @TODO (!important) do not crash when errors happen
 
 type Mode int32
 
@@ -110,6 +111,7 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) r to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
+	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
 
 	if input.Backspace {
 		// @TODO (!important) fix crash when going outside from the root of the drive
@@ -136,6 +138,8 @@ func (app *App) handleInputNormal(input *Input) {
 		app.ItemView.NavigateLastInColumn()
 	case 'm':
 		app.ItemView.MarkActiveAsFavorite()
+	case 'x':
+		app.ItemView.DeleteActive()
 	case 'p':
 		if input.Ctrl && input.Alt {
 			app.QuickOpen.Open(app.ItemView.Favorites, func(value string) {
