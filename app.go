@@ -85,6 +85,10 @@ func (app *App) Resize(windowWidth int32, windowHeight int32) {
 }
 
 func (app *App) Tick(input *Input) {
+	if app.Notification.IsOpen {
+		app.Notification.Tick()
+	}
+
 	if app.QuickOpen.IsOpen {
 		app.QuickOpen.Tick(input)
 		return

@@ -16,6 +16,9 @@ type Notification struct {
 	MaxWidth    int32
 	Padding     int32
 	LineSpacing int32
+
+	StartTime  uint32
+	CloseDelay uint32
 }
 
 func NewNotification() *Notification {
@@ -24,6 +27,7 @@ func NewNotification() *Notification {
 		MaxWidth:    394,
 		Padding:     8,
 		LineSpacing: 3,
+		CloseDelay:  3000,
 	}
 }
 
@@ -31,6 +35,7 @@ func (n *Notification) Show(e NotificationEvent) {
 	n.IsOpen = true
 	n.Message = e.Message
 	n.Type = e.Type
+	n.StartTime = sdl.GetTicks()
 }
 
 func (n *Notification) Close() {
@@ -38,7 +43,10 @@ func (n *Notification) Close() {
 }
 
 func (n *Notification) Tick() {
-
+	currentTime := sdl.GetTicks()
+	if currentTime >= n.StartTime+n.CloseDelay {
+		n.Close()
+	}
 }
 
 func (n *Notification) Render(renderer *sdl.Renderer, app *App) {
