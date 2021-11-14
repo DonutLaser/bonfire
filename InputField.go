@@ -60,6 +60,7 @@ func (i *InputField) Tick(input *Input) {
 
 func (i *InputField) Render(renderer *sdl.Renderer, x int32, y int32, font *Font, theme Subtheme) {
 	DrawRect3D(renderer, &sdl.Rect{X: x, Y: y, W: i.Rect.W, H: i.Rect.H}, GetColor(theme, "background_color"))
+	DrawRect3DInset(renderer, &sdl.Rect{X: x + i.BasePadding, Y: y + i.BasePadding, W: i.Rect.W - i.BasePadding*2, H: i.Rect.H - i.BasePadding*2}, GetColor(theme, "inset_color"))
 
 	value := i.Value.String()
 	textWidth := font.GetStringWidth(value)

@@ -130,6 +130,7 @@ func (app *App) handleInputNormal(input *Input) {
 		app.Mode = Mode_Drive_Selection
 	case 'g':
 		app.Mode = Mode_Goto
+		// @TODO (!important) show somehow that we are in the middle of changing drives
 	case 'p':
 		if input.Ctrl && input.Alt {
 			app.QuickOpen.Open(app.ItemView.Favorites, func(value string) {
@@ -154,12 +155,12 @@ func (app *App) handleInputDriveSelection(input *Input) {
 }
 
 func (app *App) handleInputGoto(input *Input) {
-	if input.TypedCharacter == 0 {
+	if input.Escape {
+		app.Mode = Mode_Normal
 		return
 	}
 
-	if input.Escape {
-		app.Mode = Mode_Normal
+	if input.TypedCharacter == 0 {
 		return
 	}
 
