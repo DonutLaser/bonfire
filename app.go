@@ -193,6 +193,9 @@ func (app *App) GoToDrive(drive byte) {
 	app.Breadcrumbs.Clear()
 	app.Breadcrumbs.Push(sb.String())
 
+	// When we are opening the drive where the cwd is, go for some reason reads the cwd, not the drive.
+	// Adding a slash after the colon seems to fix this for whatever reason.
+	sb.WriteString("/")
 	app.ItemView.ShowFolder(sb.String())
 }
 
