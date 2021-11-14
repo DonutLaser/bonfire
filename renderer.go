@@ -30,20 +30,8 @@ func DrawRectTransparent(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color
 func DrawRect3D(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	DrawRect(renderer, rect, color)
 
-	// @TODO (!important) use theme
-	highlight := sdl.Color{
-		R: 44,
-		G: 50,
-		B: 61,
-		A: 255,
-	}
-
-	shadow := sdl.Color{
-		R: 10,
-		G: 13,
-		B: 19,
-		A: 255,
-	}
+	highlight := sdl.Color{R: 255, G: 255, B: 255, A: 25}
+	shadow := sdl.Color{R: 0, G: 0, B: 0, A: 122}
 
 	DrawRectHighlight(renderer, rect, highlight, 1)
 	DrawRectShadow(renderer, rect, shadow, 1)
@@ -52,53 +40,25 @@ func DrawRect3D(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 func DrawRect3DInset(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	DrawRect(renderer, rect, color)
 
-	// @TODO (!important) use theme
-	highlight := sdl.Color{
-		R: 10,
-		G: 13,
-		B: 19,
-		A: 255,
-	}
-
-	shadow := sdl.Color{
-		R: 44,
-		G: 50,
-		B: 61,
-		A: 255,
-	}
+	highlight := sdl.Color{R: 0, G: 0, B: 0, A: 122}
+	shadow := sdl.Color{R: 255, G: 255, B: 255, A: 25}
 
 	DrawRectHighlight(renderer, rect, highlight, 1)
 	DrawRectShadow(renderer, rect, shadow, 1)
 }
 
 func DrawRectHighlight(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color, size int32) {
-	DrawRect(renderer, &sdl.Rect{ // Top
-		X: rect.X,
-		Y: rect.Y,
-		W: rect.W,
-		H: size,
-	}, color)
-	DrawRect(renderer, &sdl.Rect{ // Left
-		X: rect.X,
-		Y: rect.Y,
-		W: size,
-		H: rect.H,
-	}, color)
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
+	DrawRect(renderer, &sdl.Rect{X: rect.X, Y: rect.Y, W: rect.W, H: size}, color)
+	DrawRect(renderer, &sdl.Rect{X: rect.X, Y: rect.Y, W: size, H: rect.H}, color)
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_NONE)
 }
 
 func DrawRectShadow(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color, size int32) {
-	DrawRect(renderer, &sdl.Rect{ // Right
-		X: rect.X + rect.W - size,
-		Y: rect.Y,
-		W: size,
-		H: rect.H,
-	}, color)
-	DrawRect(renderer, &sdl.Rect{ // Bottom
-		X: rect.X,
-		Y: rect.Y + rect.H - size,
-		W: rect.W,
-		H: size,
-	}, color)
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
+	DrawRect(renderer, &sdl.Rect{X: rect.X + rect.W - size, Y: rect.Y, W: size, H: rect.H}, color)
+	DrawRect(renderer, &sdl.Rect{X: rect.X, Y: rect.Y + rect.H - size, W: rect.W, H: size}, color)
+	renderer.SetDrawBlendMode(sdl.BLENDMODE_NONE)
 }
 
 func DrawImage(renderer *sdl.Renderer, texture *sdl.Texture, rect sdl.Rect, color sdl.Color) {

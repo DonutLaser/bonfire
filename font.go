@@ -45,6 +45,35 @@ func (font *Font) ClipString(text string, width int32) string {
 	return sb.String()
 }
 
+func (font *Font) WrapString(text string, maxWidth int32) (result []string) {
+	// @TODO (!important) wrap more intelligently, maybe by words
+
+	if font.GetStringWidth(text) <= maxWidth {
+		result = []string{text}
+		return
+	}
+
+	maxChars := int(maxWidth / int32(font.CharacterWidth))
+
+	index := 0
+	var sb strings.Builder
+	for index < len(text) {
+		for i := 0; i < maxChars; i++ {
+			if index == len(text) {
+				break
+			}
+
+			sb.WriteByte(text[index])
+			index += 1
+		}
+
+		result = append(result, sb.String())
+		sb.Reset()
+	}
+
+	return
+}
+
 func (font *Font) Unload() {
 	font.Data.Close()
 }

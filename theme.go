@@ -13,20 +13,22 @@ import (
 type Subtheme map[string]interface{}
 
 type Theme struct {
-	BreadcrumbsTheme Subtheme
-	ItemViewTheme    Subtheme
-	InputFieldTheme  Subtheme
-	QuickOpenTheme   Subtheme
+	BreadcrumbsTheme  Subtheme
+	ItemViewTheme     Subtheme
+	InputFieldTheme   Subtheme
+	QuickOpenTheme    Subtheme
+	NotificationTheme Subtheme
 }
 
 func LoadTheme(themeName string) (result *Theme) {
 	data := ReadFile(fmt.Sprintf("./assets/themes/%s.bft", themeName))
 
 	result = &Theme{
-		BreadcrumbsTheme: Subtheme{},
-		ItemViewTheme:    Subtheme{},
-		InputFieldTheme:  Subtheme{},
-		QuickOpenTheme:   Subtheme{},
+		BreadcrumbsTheme:  Subtheme{},
+		ItemViewTheme:     Subtheme{},
+		InputFieldTheme:   Subtheme{},
+		QuickOpenTheme:    Subtheme{},
+		NotificationTheme: Subtheme{},
 	}
 	currentSubtheme := result.BreadcrumbsTheme
 
@@ -47,6 +49,8 @@ func LoadTheme(themeName string) (result *Theme) {
 				currentSubtheme = result.InputFieldTheme
 			} else if strings.Contains(line, "QuickOpen") {
 				currentSubtheme = result.QuickOpenTheme
+			} else if strings.Contains(line, "Notification") {
+				currentSubtheme = result.NotificationTheme
 			}
 		} else {
 			key, value := getKeyValue(line)

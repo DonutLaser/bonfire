@@ -43,11 +43,14 @@ type App struct {
 	Breadcrumbs
 	ItemView
 	QuickOpen
+	Notification
 
 	Mode Mode
 }
 
-func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result App) {
+func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
+	result = &App{}
+
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
 	result.Theme = *LoadTheme("default")
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
@@ -58,9 +61,14 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon)
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
+	result.Notification = *NewNotification()
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
+
+	globalNotificationHandler = func(e NotificationEvent) {
+		result.ShowNotification(e)
+	}
 
 	return
 }
@@ -103,8 +111,6 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) p to paste an item
 	// @TODO (!important) P to paste an item contents (files if copying folder or file contents if copying a file)
 	// @TODO (!important) / to search for an item in the current folder
-	// @TODO (!important) i to create a new file
-	// @TODO (!important) I to create a new folder
 	// @TODO (!important) ctrl + g to put selected items into a new folder
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) c to change an extension
@@ -185,18 +191,28 @@ func (app *App) GoToDrive(drive byte) {
 	sb.WriteString(strings.ToUpper(string(drive)))
 	sb.WriteString(":")
 
-	app.Breadcrumbs.Clear()
-	app.Breadcrumbs.Push(sb.String())
+	withoutSlash := sb.String()
+
+	sb.WriteString("/")
+	withSlash := sb.String()
 
 	// When we are opening the drive where the cwd is, go for some reason reads the cwd, not the drive.
 	// Adding a slash after the colon seems to fix this for whatever reason.
-	sb.WriteString("/")
-	app.ItemView.ShowFolder(sb.String())
+	success := app.ItemView.ShowFolder(withSlash)
+
+	if success {
+		app.Breadcrumbs.Clear()
+		app.Breadcrumbs.Push(withoutSlash)
+	}
 }
 
 func (app *App) GoToDirectory(fullPath string) {
 	app.Breadcrumbs.Set(fullPath)
 	app.ItemView.ShowFolder(fullPath)
+}
+
+func (app *App) ShowNotification(event NotificationEvent) {
+	app.Notification.Show(event)
 }
 
 func (app *App) Render(renderer *sdl.Renderer) {
@@ -205,6 +221,10 @@ func (app *App) Render(renderer *sdl.Renderer) {
 
 	app.Breadcrumbs.Render(renderer, &app.Font, app.Theme.BreadcrumbsTheme)
 	app.ItemView.Render(renderer, app)
+
+	if app.Notification.IsOpen {
+		app.Notification.Render(renderer, app)
+	}
 
 	if app.QuickOpen.IsOpen {
 		DrawRectTransparent(renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})

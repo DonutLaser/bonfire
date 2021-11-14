@@ -23,3 +23,9 @@ background_color = 20 27 39
 item_color = 216 216 216
 active_item_color = 216 216 216
 active_item_background_color = 44 50 61
+
+@Notification
+background_color = 28 36 51
+error_color = 227 36 36
+warning_color = 226 188 35
+info_color = 236 236 236

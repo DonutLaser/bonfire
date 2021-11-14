@@ -58,13 +58,19 @@ func (iv *ItemView) Close() {
 	iv.FavoriteIcon.Unload()
 }
 
-func (iv *ItemView) ShowFolder(fullPath string) {
+func (iv *ItemView) ShowFolder(fullPath string) bool {
 	dir, err := os.Open(fullPath)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return false
+	}
 	defer dir.Close()
 
 	items, err := dir.Readdir(-1)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return false
+	}
 
 	var files []Item
 	var folders []Item
@@ -105,6 +111,8 @@ func (iv *ItemView) ShowFolder(fullPath string) {
 
 	iv.ActiveItem = 0
 	iv.CurrentPath = fullPath
+
+	return true
 }
 
 func (iv *ItemView) NavigateDown() {
@@ -194,6 +202,8 @@ func (iv *ItemView) DeleteActive() {
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
+
+	// @TODO (!important) do not set the first item in the list as active. The item above the deleted one should become active instead
 }
 
 func (iv *ItemView) RenameActive() {
@@ -212,6 +222,29 @@ func (iv *ItemView) RenameActive() {
 		iv.Items[iv.ActiveItem].RenameInProgress = false
 		iv.ConsumingInput = false
 	})
+}
+
+func (iv *ItemView) CreateNewFile() {
+	// @TODO (!important) make sure file "New File" does not yet exist. If it does, add a number to the end of the name
+	err := os.WriteFile(path.Join(iv.CurrentPath, "New File"), []byte(""), 0644)
+	checkError(err)
+
+	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
+	iv.ShowFolder(iv.CurrentPath)
+
+	// @TODO (!important) make the new item active
+	// @TODO maybe automatically initiate rename of the new item
+}
+
+func (iv *ItemView) CreateNewFolder() {
+	err := os.Mkdir(path.Join(iv.CurrentPath, "New Folder"), 0755)
+	checkError(err)
+
+	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
+	iv.ShowFolder(iv.CurrentPath)
+
+	// @TODO (!important) make the new item active
+	// @TODO maybe automatically initiate rename of the new item
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -242,6 +275,10 @@ func (iv *ItemView) Tick(input *Input) {
 		iv.DeleteActive()
 	case 'r':
 		iv.RenameActive()
+	case 'i':
+		iv.CreateNewFile()
+	case 'I':
+		iv.CreateNewFolder()
 	}
 }
 
