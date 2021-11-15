@@ -109,8 +109,6 @@ func (app *App) Tick(input *Input) {
 
 func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) R to advanded rename a group of selected items
-	// @TODO (!important) v to select a single item
-	// @TODO (!important) V to start group selection
 	// @TODO (!important) y to copy an item
 	// @TODO (!important) p to paste an item
 	// @TODO (!important) P to paste an item contents (files if copying folder or file contents if copying a file)
@@ -120,6 +118,7 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) c to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
+	// @TODO (!important) ctrl + a to select all items
 
 	app.ItemView.Tick(input)
 

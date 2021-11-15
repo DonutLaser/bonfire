@@ -10,6 +10,9 @@ file_color = 216 216 216
 active_folder_color = 254 203 0
 active_file_color = 216 216 216
 active_background_color = 44 50 61
+selected_folder_color = 254 203 0
+selected_file_color = 216 216 216
+selected_background_color = 28 53 96
 favorite_icon_color = 254 108 0
 
 @InputField

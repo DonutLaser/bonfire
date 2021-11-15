@@ -17,8 +17,10 @@ const (
 )
 
 type Item struct {
-	Type             ItemType
-	Name             string
+	Type ItemType
+	Name string
+
+	IsSelected       bool
 	IsFavorite       bool
 	RenameInProgress bool
 }
@@ -39,6 +41,8 @@ type ItemView struct {
 	FavoriteIcon   *Image
 	Input          *InlineInputField
 	ConsumingInput bool
+	SelectionMode  bool
+	SelectionStart int32
 }
 
 func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
@@ -118,12 +122,14 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 func (iv *ItemView) NavigateDown() {
 	if iv.ActiveItem < int32(len(iv.Items)-1) {
 		iv.ActiveItem++
+		iv.updateSelection()
 	}
 }
 
 func (iv *ItemView) NavigateUp() {
 	if iv.ActiveItem > 0 {
 		iv.ActiveItem--
+		iv.updateSelection()
 	}
 }
 
@@ -139,6 +145,8 @@ func (iv *ItemView) NavigateRight() {
 	} else {
 		iv.ActiveItem += iv.MaxItemsPerColumn
 	}
+
+	iv.updateSelection()
 }
 
 func (iv *ItemView) NavigateLeft() {
@@ -148,10 +156,12 @@ func (iv *ItemView) NavigateLeft() {
 
 	iv.ActiveColumn--
 	iv.ActiveItem -= iv.MaxItemsPerColumn
+	iv.updateSelection()
 }
 
 func (iv *ItemView) NavigateFirstInColumn() {
 	iv.ActiveItem = iv.ActiveColumn * iv.MaxItemsPerColumn
+	iv.updateSelection()
 }
 
 func (iv *ItemView) NavigateLastInColumn() {
@@ -159,6 +169,8 @@ func (iv *ItemView) NavigateLastInColumn() {
 	if iv.ActiveItem >= int32(len(iv.Items)) {
 		iv.ActiveItem = int32(len(iv.Items) - 1)
 	}
+
+	iv.updateSelection()
 }
 
 func (iv *ItemView) GoInside() (result string) {
@@ -224,6 +236,44 @@ func (iv *ItemView) RenameActive() {
 	})
 }
 
+func (iv *ItemView) SelectActive() {
+	if iv.ActiveItem < 0 || iv.ActiveItem >= int32(len(iv.Items)) {
+		return
+	}
+
+	iv.Items[iv.ActiveItem].IsSelected = !iv.Items[iv.ActiveItem].IsSelected
+}
+
+func (iv *ItemView) StartSelection() {
+	iv.SelectionMode = true
+
+	iv.SelectActive()
+	iv.SelectionStart = iv.ActiveItem
+}
+
+func (iv *ItemView) SelectAll(sel bool) {
+	for i := 0; i < len(iv.Items); i++ {
+		iv.Items[i].IsSelected = sel
+	}
+}
+
+func (iv *ItemView) updateSelection() {
+	if !iv.SelectionMode {
+		return
+	}
+
+	from := iv.SelectionStart
+	to := iv.ActiveItem
+	if iv.SelectionStart > iv.ActiveItem {
+		from = iv.ActiveItem
+		to = iv.SelectionStart
+	}
+
+	for i := 0; i < len(iv.Items); i++ {
+		iv.Items[i].IsSelected = int32(i) >= from && int32(i) <= to
+	}
+}
+
 func (iv *ItemView) CreateNewFile() {
 	// @TODO (!important) make sure file "New File" does not yet exist. If it does, add a number to the end of the name
 	err := os.WriteFile(path.Join(iv.CurrentPath, "New File"), []byte(""), 0644)
@@ -258,6 +308,12 @@ func (iv *ItemView) Tick(input *Input) {
 		return
 	}
 
+	if input.Escape {
+		iv.SelectAll(false)
+		iv.SelectionMode = false
+		return
+	}
+
 	switch input.TypedCharacter {
 	case 'h':
 		iv.NavigateLeft()
@@ -275,6 +331,14 @@ func (iv *ItemView) Tick(input *Input) {
 		iv.DeleteActive()
 	case 'r':
 		iv.RenameActive()
+	case 'v':
+		iv.SelectActive()
+	case 'V':
+		iv.StartSelection()
+	case 'a':
+		if input.Ctrl {
+			iv.SelectAll(true)
+		}
 	case 'i':
 		iv.CreateNewFile()
 	case 'I':
@@ -311,8 +375,8 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 
 			if item.RenameInProgress {
 				iv.Input.Render(renderer, rect, &font, ifTheme)
+				continue
 			} else {
-
 				name := item.Name
 				width := font.GetStringWidth(name)
 				if width > iv.ItemWidth {
@@ -339,7 +403,15 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 					if item.Type == Item_Type_Folder {
 						color = GetColor(ivTheme, "active_folder_color")
 					}
+				} else if item.IsSelected {
+					DrawRect(renderer, &rect, GetColor(ivTheme, "selected_background_color"))
+
+					color = GetColor(ivTheme, "selected_file_color")
+					if item.Type == Item_Type_Folder {
+						color = GetColor(ivTheme, "selected_folder_color")
+					}
 				}
+
 				DrawText(renderer, &font, name, &stringRect, color)
 
 				if item.IsFavorite {
