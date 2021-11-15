@@ -46,30 +46,33 @@ func (font *Font) ClipString(text string, width int32) string {
 }
 
 func (font *Font) WrapString(text string, maxWidth int32) (result []string) {
-	// @TODO (!important) wrap more intelligently, maybe by words
-
 	if font.GetStringWidth(text) <= maxWidth {
 		result = []string{text}
 		return
 	}
 
-	maxChars := int(maxWidth / int32(font.CharacterWidth))
+	words := strings.Split(text, " ")
 
-	index := 0
+	var currentWidth int32 = 0
+
 	var sb strings.Builder
-	for index < len(text) {
-		for i := 0; i < maxChars; i++ {
-			if index == len(text) {
-				break
-			}
-
-			sb.WriteByte(text[index])
-			index += 1
+	for _, word := range words {
+		wordLength := font.GetStringWidth(word)
+		newWidth := currentWidth + wordLength
+		if newWidth < maxWidth {
+			sb.WriteString(word)
+			sb.WriteString(" ")
+			currentWidth = newWidth + int32(font.CharacterWidth)
+		} else {
+			result = append(result, sb.String())
+			sb.Reset()
+			sb.WriteString(word)
+			sb.WriteString(" ")
+			currentWidth = wordLength + int32(font.CharacterWidth)
 		}
-
-		result = append(result, sb.String())
-		sb.Reset()
 	}
+
+	result = append(result, sb.String())
 
 	return
 }
