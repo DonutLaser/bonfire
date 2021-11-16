@@ -217,8 +217,17 @@ func (iv *ItemView) DeleteActive() {
 	err := os.Remove(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 	checkError(err)
 
+	lastActive := iv.ActiveItem
+
+	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
-	// @TODO (!important) do not set the first item in the list as active. The item above the deleted one should become active instead
+
+	iv.ActiveItem = lastActive
+	if iv.ActiveItem >= int32(len(iv.Items)) && len(iv.Items) > 0 {
+		iv.ActiveItem = int32(len(iv.Items)) - 1
+	} else if len(iv.Items) == 0 {
+		iv.ActiveItem = -1
+	}
 }
 
 func (iv *ItemView) DeleteSelected() {
@@ -303,6 +312,15 @@ func (iv *ItemView) getSelectedItemsCount() (result int32) {
 	return
 }
 
+func (iv *ItemView) setActiveByName(name string) {
+	for index, item := range iv.Items {
+		if item.Name == name {
+			iv.ActiveItem = int32(index)
+			break
+		}
+	}
+}
+
 func (iv *ItemView) CreateNewFile() {
 	// @TODO (!important) make sure file "New File" does not yet exist. If it does, add a number to the end of the name
 	err := os.WriteFile(path.Join(iv.CurrentPath, "New File"), []byte(""), 0644)
@@ -310,8 +328,7 @@ func (iv *ItemView) CreateNewFile() {
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
-
-	// @TODO (!important) make the new item active
+	iv.setActiveByName("New File")
 	// @TODO maybe automatically initiate rename of the new item
 }
 
@@ -324,7 +341,7 @@ func (iv *ItemView) CreateNewFolder(updateView bool) {
 		iv.ShowFolder(iv.CurrentPath)
 	}
 
-	// @TODO (!important) make the new item active
+	iv.setActiveByName("New Folder")
 	// @TODO maybe automatically initiate rename of the new item
 }
 
@@ -350,6 +367,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 	iv.SelectionMode = false
 
 	iv.ShowFolder(iv.CurrentPath)
+	iv.setActiveByName("New Folder")
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {

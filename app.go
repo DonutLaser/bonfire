@@ -112,7 +112,6 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) c to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
-	// @TODO (!important) x to all selected items
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) D to duplicate a file
 
