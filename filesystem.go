@@ -6,7 +6,10 @@ import (
 
 func ReadFile(fullPath string) string {
 	contents, err := os.ReadFile(fullPath)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return ""
+	}
 
 	return string(contents)
 }

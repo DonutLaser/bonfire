@@ -13,10 +13,16 @@ type Image struct {
 
 func LoadImage(path string, renderer *sdl.Renderer) (result Image) {
 	image, err := img.Load(path)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	texture, err := renderer.CreateTextureFromSurface(image)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	result = Image{
 		Data:   texture,
@@ -31,7 +37,10 @@ func LoadImage(path string, renderer *sdl.Renderer) (result Image) {
 
 func LoadIcon(path string) *sdl.Surface {
 	image, err := img.Load(path)
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return nil
+	}
 
 	return image
 }

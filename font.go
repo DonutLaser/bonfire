@@ -14,11 +14,17 @@ type Font struct {
 
 func LoadFont(path string, size int32) (result Font) {
 	font, err := ttf.OpenFont(path, int(size))
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	// We assume that the font is going to always be monospaced
 	metrics, err := font.GlyphMetrics('m')
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	result.Data = font
 	result.Size = size
