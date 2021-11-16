@@ -28,6 +28,10 @@ func (b *Breadcrumbs) Push(path string) {
 }
 
 func (b *Breadcrumbs) Pop() string {
+	if len(b.Path) <= 1 {
+		return ""
+	}
+
 	result := b.Path[len(b.Path)-1]
 	b.Path = b.Path[:len(b.Path)-1]
 	return result

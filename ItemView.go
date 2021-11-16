@@ -365,13 +365,13 @@ func (iv *ItemView) CreateNewFile() {
 	// // @TODO maybe automatically initiate rename of the new item
 }
 
-func (iv *ItemView) CreateNewFolder(updateView bool) {
+func (iv *ItemView) CreateNewFolder(updateView bool) string {
 	name := iv.getAvailableFileName("New Folder")
 
 	err := os.Mkdir(path.Join(iv.CurrentPath, name), 0755)
 	if err != nil {
 		NotifyError(err.Error())
-		return
+		return ""
 	}
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
@@ -381,6 +381,8 @@ func (iv *ItemView) CreateNewFolder(updateView bool) {
 
 	iv.setActiveByName(name)
 	// @TODO maybe automatically initiate rename of the new item
+
+	return name
 }
 
 func (iv *ItemView) GroupSelectedFiles() {
@@ -389,7 +391,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 	}
 
 	// @TODO (!important) this might not produce a folder named "New Folder". The name of the folder might be different
-	iv.CreateNewFolder(false)
+	newFolderName := iv.CreateNewFolder(false)
 
 	for i := 0; i < len(iv.Items); i++ {
 		if !iv.Items[i].IsSelected {
@@ -397,7 +399,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 		}
 
 		oldPath := path.Join(iv.CurrentPath, iv.Items[i].Name)
-		newPath := path.Join(iv.CurrentPath, "New Folder", iv.Items[i].Name)
+		newPath := path.Join(iv.CurrentPath, newFolderName, iv.Items[i].Name)
 		err := os.Rename(oldPath, newPath)
 		if err != nil {
 			NotifyError(err.Error())
@@ -408,7 +410,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 	iv.SelectionMode = false
 
 	iv.ShowFolder(iv.CurrentPath)
-	iv.setActiveByName("New Folder")
+	iv.setActiveByName(newFolderName)
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -434,10 +436,11 @@ func (iv *ItemView) Tick(input *Input) {
 	}
 
 	if input.Backspace {
-		// @TODO (!important) fix crash when going outside from the root of the drive
 		// @TODO (!important) this should retain the last position so that when you go back, the active item doesn't always become 0
-		iv.App.Breadcrumbs.Pop()
-		iv.GoOutside()
+		crumb := iv.App.Breadcrumbs.Pop()
+		if crumb != "" {
+			iv.GoOutside()
+		}
 		return
 	}
 
