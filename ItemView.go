@@ -482,7 +482,6 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 
 			if item.RenameInProgress {
 				iv.Input.Render(renderer, rect, &font, ifTheme)
-				continue
 			} else {
 				name := item.Name
 				width := font.GetStringWidth(name)
