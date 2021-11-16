@@ -114,6 +114,8 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) D to duplicate a file
+	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
+	// @TODO (!important) alt + e to show the last error
 
 	app.ItemView.Tick(input)
 
