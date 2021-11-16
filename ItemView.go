@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/veandco/go-sdl2/sdl"
@@ -215,7 +216,10 @@ func (iv *ItemView) DeleteActive() {
 	}
 
 	err := os.Remove(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
-	checkError(err)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	lastActive := iv.ActiveItem
 
@@ -237,7 +241,10 @@ func (iv *ItemView) DeleteSelected() {
 		}
 
 		err := os.Remove(path.Join(iv.CurrentPath, iv.Items[i].Name))
-		checkError(err)
+		if err != nil {
+			NotifyError(err.Error())
+			continue
+		}
 	}
 
 	iv.SelectionMode = false
@@ -257,7 +264,10 @@ func (iv *ItemView) RenameActive() {
 		iv.ConsumingInput = false
 
 		err := os.Rename(path.Join(iv.CurrentPath, oldName), path.Join(iv.CurrentPath, value))
-		checkError(err)
+		if err != nil {
+			NotifyError(err.Error())
+			iv.Items[iv.ActiveItem].Name = oldName
+		}
 	}, func() {
 		iv.Items[iv.ActiveItem].RenameInProgress = false
 		iv.ConsumingInput = false
@@ -312,6 +322,25 @@ func (iv *ItemView) getSelectedItemsCount() (result int32) {
 	return
 }
 
+func (iv *ItemView) getAvailableFileName(baseName string) (result string) {
+	fullPath := path.Join(iv.CurrentPath, baseName)
+
+	fileDoesNotExist := true
+	count := 0
+	for fileDoesNotExist {
+		_, err := os.Stat(fullPath)
+		if err == nil {
+			count += 1
+			fullPath = path.Join(iv.CurrentPath, baseName+" ("+strconv.Itoa(count)+")")
+		} else {
+			fileDoesNotExist = false
+			result = baseName + " (" + strconv.Itoa(count) + ")"
+		}
+	}
+
+	return
+}
+
 func (iv *ItemView) setActiveByName(name string) {
 	for index, item := range iv.Items {
 		if item.Name == name {
@@ -322,26 +351,35 @@ func (iv *ItemView) setActiveByName(name string) {
 }
 
 func (iv *ItemView) CreateNewFile() {
-	// @TODO (!important) make sure file "New File" does not yet exist. If it does, add a number to the end of the name
-	err := os.WriteFile(path.Join(iv.CurrentPath, "New File"), []byte(""), 0644)
-	checkError(err)
+	name := iv.getAvailableFileName("New File")
 
-	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
+	err := os.WriteFile(path.Join(iv.CurrentPath, name), []byte(""), 0644)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
+
+	// // @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
-	iv.setActiveByName("New File")
-	// @TODO maybe automatically initiate rename of the new item
+	iv.setActiveByName(name)
+	// // @TODO maybe automatically initiate rename of the new item
 }
 
 func (iv *ItemView) CreateNewFolder(updateView bool) {
-	err := os.Mkdir(path.Join(iv.CurrentPath, "New Folder"), 0755)
-	checkError(err)
+	name := iv.getAvailableFileName("New Folder")
+
+	err := os.Mkdir(path.Join(iv.CurrentPath, name), 0755)
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	if updateView {
 		iv.ShowFolder(iv.CurrentPath)
 	}
 
-	iv.setActiveByName("New Folder")
+	iv.setActiveByName(name)
 	// @TODO maybe automatically initiate rename of the new item
 }
 
@@ -361,7 +399,10 @@ func (iv *ItemView) GroupSelectedFiles() {
 		oldPath := path.Join(iv.CurrentPath, iv.Items[i].Name)
 		newPath := path.Join(iv.CurrentPath, "New Folder", iv.Items[i].Name)
 		err := os.Rename(oldPath, newPath)
-		checkError(err)
+		if err != nil {
+			NotifyError(err.Error())
+			continue
+		}
 	}
 
 	iv.SelectionMode = false
