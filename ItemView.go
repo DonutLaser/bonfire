@@ -38,6 +38,9 @@ type ItemView struct {
 	MaxItemsPerColumn int32
 	Columns           int32
 
+	App  *App
+	Mode Mode
+
 	FavoriteIcon   *Image
 	Input          *InlineInputField
 	ConsumingInput bool
@@ -45,7 +48,7 @@ type ItemView struct {
 	SelectionStart int32
 }
 
-func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
+func NewItemView(rect sdl.Rect, favoriteIcon *Image, app *App) *ItemView {
 	return &ItemView{
 		ActiveItem:        -1,
 		ActiveColumn:      0,
@@ -53,6 +56,8 @@ func NewItemView(rect sdl.Rect, favoriteIcon *Image) *ItemView {
 		ItemHeight:        24,
 		ItemWidth:         394,
 		MaxItemsPerColumn: rect.H / 24,
+		App:               app,
+		Mode:              Mode_Normal,
 		FavoriteIcon:      favoriteIcon,
 		Input:             NewInlineInputField(),
 	}
@@ -274,6 +279,16 @@ func (iv *ItemView) updateSelection() {
 	}
 }
 
+func (iv *ItemView) getSelectedItemsCount() (result int32) {
+	for i := 0; i < len(iv.Items); i++ {
+		if iv.Items[i].IsSelected {
+			result++
+		}
+	}
+
+	return
+}
+
 func (iv *ItemView) CreateNewFile() {
 	// @TODO (!important) make sure file "New File" does not yet exist. If it does, add a number to the end of the name
 	err := os.WriteFile(path.Join(iv.CurrentPath, "New File"), []byte(""), 0644)
@@ -286,15 +301,44 @@ func (iv *ItemView) CreateNewFile() {
 	// @TODO maybe automatically initiate rename of the new item
 }
 
-func (iv *ItemView) CreateNewFolder() {
+func (iv *ItemView) CreateNewFolder(updateView bool) {
 	err := os.Mkdir(path.Join(iv.CurrentPath, "New Folder"), 0755)
 	checkError(err)
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
-	iv.ShowFolder(iv.CurrentPath)
+	if updateView {
+		iv.ShowFolder(iv.CurrentPath)
+	}
 
 	// @TODO (!important) make the new item active
 	// @TODO maybe automatically initiate rename of the new item
+}
+
+func (iv *ItemView) GroupSelectedFiles() {
+	if !iv.SelectionMode && iv.getSelectedItemsCount() == 0 {
+		return
+	}
+
+	// @TODO (!important) this might not produce a folder named "New Folder". The name of the folder might be different
+	iv.CreateNewFolder(false)
+
+	newItems := make([]Item, 0)
+	for i := 0; i < len(iv.Items); i++ {
+		if !iv.Items[i].IsSelected {
+			newItems = append(newItems, iv.Items[i])
+			continue
+		}
+
+		oldPath := path.Join(iv.CurrentPath, iv.Items[i].Name)
+		newPath := path.Join(iv.CurrentPath, "New Folder", iv.Items[i].Name)
+		err := os.Rename(oldPath, newPath)
+		checkError(err)
+	}
+
+	iv.Items = newItems
+	iv.SelectionMode = false
+
+	iv.ShowFolder(iv.CurrentPath)
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -308,9 +352,22 @@ func (iv *ItemView) Tick(input *Input) {
 		return
 	}
 
+	if iv.Mode == Mode_Goto {
+		iv.handleInputGoto(input)
+		return
+	}
+
 	if input.Escape {
 		iv.SelectAll(false)
 		iv.SelectionMode = false
+		return
+	}
+
+	if input.Backspace {
+		// @TODO (!important) fix crash when going outside from the root of the drive
+		// @TODO (!important) this should retain the last position so that when you go back, the active item doesn't always become 0
+		iv.App.Breadcrumbs.Pop()
+		iv.GoOutside()
 		return
 	}
 
@@ -325,6 +382,13 @@ func (iv *ItemView) Tick(input *Input) {
 		iv.NavigateRight()
 	case 'G':
 		iv.NavigateLastInColumn()
+	case 'g':
+		if input.Ctrl {
+			iv.GroupSelectedFiles()
+		} else {
+			iv.Mode = Mode_Goto
+			// @TODO (!important) show somehow that we are in the middle of changing drives
+		}
 	case 'm':
 		iv.MarkActiveAsFavorite()
 	case 'x':
@@ -342,7 +406,35 @@ func (iv *ItemView) Tick(input *Input) {
 	case 'i':
 		iv.CreateNewFile()
 	case 'I':
-		iv.CreateNewFolder()
+		iv.CreateNewFolder(true)
+	case '`':
+		iv.App.SelectFavorite(iv.Favorites)
+	}
+}
+
+func (iv *ItemView) handleInputGoto(input *Input) {
+	if input.Escape {
+		iv.Mode = Mode_Normal
+		return
+	}
+
+	if input.TypedCharacter == 0 {
+		return
+	}
+
+	switch input.TypedCharacter {
+	case 'd':
+		activeFolder := iv.GoInside()
+		if activeFolder != "" {
+			iv.App.Breadcrumbs.Push(activeFolder)
+		}
+
+		iv.Mode = Mode_Normal
+	case 'g':
+		iv.App.ItemView.NavigateFirstInColumn()
+		iv.Mode = Mode_Normal
+	default:
+		iv.Mode = Mode_Normal
 	}
 }
 

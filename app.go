@@ -58,7 +58,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
 
 	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
-	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon)
+	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon, result)
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
@@ -99,11 +99,6 @@ func (app *App) Tick(input *Input) {
 		return
 	}
 
-	if app.Mode == Mode_Goto {
-		app.handleInputGoto(input)
-		return
-	}
-
 	app.handleInputNormal(input)
 }
 
@@ -119,6 +114,8 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) M to mark the parent folder as favorite
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
 	// @TODO (!important) ctrl + a to select all items
+	// @TODO (!important) x to all selected items
+	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 
 	app.ItemView.Tick(input)
 
@@ -126,26 +123,9 @@ func (app *App) handleInputNormal(input *Input) {
 		return
 	}
 
-	if input.Backspace {
-		// @TODO (!important) fix crash when going outside from the root of the drive
-		// @TODO (!important) this should retain the last position so that when you go back, the active item doesn't always become 0
-		app.Breadcrumbs.Pop()
-		app.ItemView.GoOutside()
-		return
-	}
-
 	switch input.TypedCharacter {
 	case ':':
 		app.Mode = Mode_Drive_Selection
-	case 'g':
-		app.Mode = Mode_Goto
-		// @TODO (!important) show somehow that we are in the middle of changing drives
-	case 'p':
-		if input.Ctrl && input.Alt {
-			app.QuickOpen.Open(app.ItemView.Favorites, func(value string) {
-				app.GoToDirectory(value)
-			})
-		}
 	}
 }
 
@@ -161,32 +141,6 @@ func (app *App) handleInputDriveSelection(input *Input) {
 
 	app.GoToDrive(input.TypedCharacter)
 	app.Mode = Mode_Normal
-}
-
-func (app *App) handleInputGoto(input *Input) {
-	if input.Escape {
-		app.Mode = Mode_Normal
-		return
-	}
-
-	if input.TypedCharacter == 0 {
-		return
-	}
-
-	switch input.TypedCharacter {
-	case 'd':
-		activeFolder := app.ItemView.GoInside()
-		if activeFolder != "" {
-			app.Breadcrumbs.Push(activeFolder)
-		}
-
-		app.Mode = Mode_Normal
-	case 'g':
-		app.ItemView.NavigateFirstInColumn()
-		app.Mode = Mode_Normal
-	default:
-		app.Mode = Mode_Normal
-	}
 }
 
 func (app *App) GoToDrive(drive byte) {
@@ -212,6 +166,12 @@ func (app *App) GoToDrive(drive byte) {
 func (app *App) GoToDirectory(fullPath string) {
 	app.Breadcrumbs.Set(fullPath)
 	app.ItemView.ShowFolder(fullPath)
+}
+
+func (app *App) SelectFavorite(favorites []string) {
+	app.QuickOpen.Open(favorites, func(value string) {
+		app.GoToDirectory(value)
+	})
 }
 
 func (app *App) ShowNotification(event NotificationEvent) {
