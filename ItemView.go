@@ -217,10 +217,24 @@ func (iv *ItemView) DeleteActive() {
 	err := os.Remove(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 	checkError(err)
 
+	iv.ShowFolder(iv.CurrentPath)
+	// @TODO (!important) do not set the first item in the list as active. The item above the deleted one should become active instead
+}
+
+func (iv *ItemView) DeleteSelected() {
+	for i := 0; i < len(iv.Items); i++ {
+		if !iv.Items[i].IsSelected {
+			continue
+		}
+
+		err := os.Remove(path.Join(iv.CurrentPath, iv.Items[i].Name))
+		checkError(err)
+	}
+
+	iv.SelectionMode = false
+
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
-
-	// @TODO (!important) do not set the first item in the list as active. The item above the deleted one should become active instead
 }
 
 func (iv *ItemView) RenameActive() {
@@ -322,10 +336,8 @@ func (iv *ItemView) GroupSelectedFiles() {
 	// @TODO (!important) this might not produce a folder named "New Folder". The name of the folder might be different
 	iv.CreateNewFolder(false)
 
-	newItems := make([]Item, 0)
 	for i := 0; i < len(iv.Items); i++ {
 		if !iv.Items[i].IsSelected {
-			newItems = append(newItems, iv.Items[i])
 			continue
 		}
 
@@ -335,7 +347,6 @@ func (iv *ItemView) GroupSelectedFiles() {
 		checkError(err)
 	}
 
-	iv.Items = newItems
 	iv.SelectionMode = false
 
 	iv.ShowFolder(iv.CurrentPath)
@@ -392,7 +403,11 @@ func (iv *ItemView) Tick(input *Input) {
 	case 'm':
 		iv.MarkActiveAsFavorite()
 	case 'x':
-		iv.DeleteActive()
+		if iv.getSelectedItemsCount() == 0 {
+			iv.DeleteActive()
+		} else {
+			iv.DeleteSelected()
+		}
 	case 'r':
 		iv.RenameActive()
 	case 'v':
