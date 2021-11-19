@@ -221,9 +221,15 @@ func (iv *ItemView) GoInside() (result string) {
 
 func (iv *ItemView) GoOutside() {
 	split := strings.Split(iv.CurrentPath, "/")
+	lastName := split[len(split)-1]
 	iv.CurrentPath = strings.Join(split[:len(split)-1], "/")
 
+	if strings.HasSuffix(iv.CurrentPath, ":") {
+		iv.CurrentPath += "/"
+	}
+
 	iv.ShowFolder(iv.CurrentPath)
+	iv.SetActiveByName(lastName)
 }
 
 func (iv *ItemView) MarkActiveAsFavorite() {
