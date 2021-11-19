@@ -580,7 +580,7 @@ func (iv *ItemView) Tick(input *Input) {
 			iv.Mode = Mode_Goto
 			// @TODO (!important) show somehow that we are in the middle of changing drives
 		}
-	case 'm':
+	case '*':
 		iv.MarkActiveAsFavorite()
 	case 'x':
 		if iv.getSelectedItemsCount() == 0 {
