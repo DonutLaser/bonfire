@@ -63,7 +63,6 @@ func (q *QuickOpen) Close() {
 }
 
 func (q *QuickOpen) Submit() {
-	// @TODO (!important) handle files, not only folders
 	if q.OnSubmit != nil {
 		q.OnSubmit(q.Results[q.ActiveItem])
 	}

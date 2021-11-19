@@ -7,12 +7,10 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) open favorite file
 // @TODO (!important) copy files and folders
 // @TODO (!important) advanced rename files and folders
 // @TODO (!important) show/hide hidden files
 // @TODO (!important) custom themes
-// @TODO (!important) open files
 // @TODO (!important) tag files
 // @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
@@ -96,15 +94,13 @@ func (app *App) Tick(input *Input) {
 
 func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) R to advanded rename a group of selected items
-	// @TODO (!important) y to copy an item
-	// @TODO (!important) p to paste an item
-	// @TODO (!important) P to paste an item contents (files if copying folder or file contents if copying a file)
+	// @TODO (!important) p to paste a folder
+	// @TODO (!important) P to paste an item contents (files if copying folder), shouldn't do anything for copied files
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) c to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
 	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
-	// @TODO (!important) D to duplicate a file
 	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
 
 	app.ItemView.Tick(input)
