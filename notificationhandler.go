@@ -19,3 +19,14 @@ func NotifyError(message string) {
 	sb.WriteString(message)
 	globalNotificationHandler(NotificationEvent{Type: NotificationError, Message: sb.String()})
 }
+
+func NotifyInfo(message string) {
+	if globalNotificationHandler == nil {
+		return
+	}
+
+	var sb strings.Builder
+	sb.WriteString("[INFO] ")
+	sb.WriteString(message)
+	globalNotificationHandler(NotificationEvent{Type: NotificationInfo, Message: sb.String()})
+}

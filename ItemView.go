@@ -17,6 +17,12 @@ const (
 	Item_Type_Folder
 )
 
+type Clipboard struct {
+	FullPath string
+	Name     string
+	Type     ItemType
+}
+
 type Item struct {
 	Type ItemType
 	Name string
@@ -31,7 +37,9 @@ type ItemView struct {
 	ActiveItem   int32
 	ActiveColumn int32
 	CurrentPath  string
-	Favorites    []string
+
+	Favorites []string
+	Clipboard
 
 	Rect              sdl.Rect
 	ItemHeight        int32
@@ -271,6 +279,48 @@ func (iv *ItemView) DeleteSelected() {
 	iv.ShowFolder(iv.CurrentPath)
 }
 
+func (iv *ItemView) CopyActive(showNotification bool) {
+	iv.Clipboard.Name = iv.Items[iv.ActiveItem].Name
+	iv.Clipboard.FullPath = path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
+	iv.Clipboard.Type = iv.Items[iv.ActiveItem].Type
+
+	if showNotification {
+		NotifyInfo("Copied " + iv.Clipboard.FullPath)
+	}
+}
+
+func (iv *ItemView) Paste() {
+	if iv.Clipboard.Type == Item_Type_Folder {
+		// @TODO (!important) implement pasting a folder
+	} else if iv.Clipboard.Type == Item_Type_File {
+		name := iv.getAvailableFileName(iv.Clipboard.Name)
+
+		data, err := os.ReadFile(iv.Clipboard.FullPath)
+		if err != nil {
+			NotifyError(err.Error())
+			return
+		}
+
+		err = os.WriteFile(path.Join(iv.CurrentPath, name), data, 0644)
+		if err != nil {
+			NotifyError(err.Error())
+			return
+		}
+
+		iv.ShowFolder(iv.CurrentPath)
+		iv.SetActiveByName(name)
+	}
+}
+
+func (iv *ItemView) DuplicateActive() {
+	if iv.Items[iv.ActiveItem].Type == Item_Type_Folder {
+
+	} else if iv.Items[iv.ActiveItem].Type == Item_Type_File {
+		iv.CopyActive(false)
+		iv.Paste()
+	}
+}
+
 func (iv *ItemView) RenameActive() {
 	iv.Items[iv.ActiveItem].RenameInProgress = true
 	iv.ConsumingInput = true
@@ -341,6 +391,8 @@ func (iv *ItemView) getSelectedItemsCount() (result int32) {
 }
 
 func (iv *ItemView) getAvailableFileName(baseName string) (result string) {
+	// @TODO (!important) this should not add the numbers after the extension making the extension unusable
+
 	fullPath := path.Join(iv.CurrentPath, baseName)
 
 	fileDoesNotExist := true
@@ -530,6 +582,16 @@ func (iv *ItemView) Tick(input *Input) {
 		} else {
 			iv.DeleteSelected()
 		}
+	case 'y':
+		if iv.getSelectedItemsCount() == 0 {
+			iv.CopyActive(true)
+		} else {
+			// iv.CopySelected()
+		}
+	case 'p':
+		iv.Paste()
+	case 'D':
+		iv.DuplicateActive()
 	case 'r':
 		iv.RenameActive()
 	case 'v':

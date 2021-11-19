@@ -6,6 +6,7 @@ type NotificationType uint8
 
 const (
 	NotificationError NotificationType = iota
+	NotificationInfo  NotificationType = iota
 )
 
 type Notification struct {
@@ -79,6 +80,9 @@ func (n *Notification) Render(renderer *sdl.Renderer, app *App) {
 		}
 
 		color := GetColor(theme, "error_color")
+		if n.Type == NotificationInfo {
+			color = GetColor(theme, "info_color")
+		}
 
 		DrawText(renderer, &app.Font, line, &lineRect, color)
 	}

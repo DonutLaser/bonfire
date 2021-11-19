@@ -7,25 +7,16 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) marking folders and files as favorite
-// @TODO (!important) open favorite files and folders
+// @TODO (!important) open favorite file
 // @TODO (!important) copy files and folders
-// @TODO (!important) group files/folders into a new folder
-// @TODO (!important) search files in the current folder
-// @TODO (!important) remove files and folders
-// @TODO (!important) select multiple files/folders
-// @TODO (!important) simple rename files and folders
 // @TODO (!important) advanced rename files and folders
 // @TODO (!important) show/hide hidden files
-// @TODO (!important) create new file
-// @TODO (!important) create new folder
 // @TODO (!important) custom themes
 // @TODO (!important) open files
 // @TODO (!important) tag files
 // @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
 // @TODO (!important) make sure changes in the directory that are made outside the app are automatically reflected in the app
-// @TODO (!important) do not crash when errors happen
 
 type Mode int32
 
@@ -108,7 +99,6 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) y to copy an item
 	// @TODO (!important) p to paste an item
 	// @TODO (!important) P to paste an item contents (files if copying folder or file contents if copying a file)
-	// @TODO (!important) / to search for an item in the current folder
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) c to change an extension
 	// @TODO (!important) M to mark the parent folder as favorite
