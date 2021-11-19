@@ -170,7 +170,7 @@ func (app *App) SelectFavorite(favorites []string) {
 
 func (app *App) FindInCurrentFolder(items []string) {
 	app.QuickOpen.Open(items, func(item string) {
-		app.ItemView.OpenFolder(item)
+		app.ItemView.OpenItem(item)
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/skratchdot/open-golang/open"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -142,6 +143,16 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	return true
 }
 
+func (iv *ItemView) OpenItem(name string) {
+	iv.SetActiveByName(name)
+
+	if iv.Items[iv.ActiveItem].Type == Item_Type_Folder {
+		iv.OpenFolder(name)
+	} else if iv.Items[iv.ActiveItem].Type == Item_Type_File {
+		iv.OpenFile(name)
+	}
+}
+
 func (iv *ItemView) OpenFolder(name string) {
 	iv.SetActiveByName(name)
 
@@ -149,6 +160,10 @@ func (iv *ItemView) OpenFolder(name string) {
 	if activeFolder != "" {
 		iv.App.Breadcrumbs.Push(activeFolder)
 	}
+}
+
+func (iv *ItemView) OpenFile(name string) {
+	open.Start(path.Join(iv.CurrentPath, name))
 }
 
 func (iv *ItemView) NavigateDown() {
@@ -211,9 +226,12 @@ func (iv *ItemView) GoInside() (result string) {
 	}
 
 	item := iv.Items[iv.ActiveItem]
+
 	if item.Type == Item_Type_Folder {
-		result = item.Name
 		iv.ShowFolder(path.Join(iv.CurrentPath, item.Name))
+		result = item.Name
+	} else {
+		iv.OpenFile(item.Name)
 	}
 
 	return
