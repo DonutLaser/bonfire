@@ -68,6 +68,15 @@ func (iv *ItemView) Close() {
 	iv.FavoriteIcon.Unload()
 }
 
+func (iv *ItemView) SetActiveByName(name string) {
+	for index, item := range iv.Items {
+		if item.Name == name {
+			iv.ActiveItem = int32(index)
+			break
+		}
+	}
+}
+
 func (iv *ItemView) ShowFolder(fullPath string) bool {
 	dir, err := os.Open(fullPath)
 	if err != nil {
@@ -123,6 +132,15 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	iv.CurrentPath = fullPath
 
 	return true
+}
+
+func (iv *ItemView) OpenFolder(name string) {
+	iv.SetActiveByName(name)
+
+	activeFolder := iv.GoInside()
+	if activeFolder != "" {
+		iv.App.Breadcrumbs.Push(activeFolder)
+	}
 }
 
 func (iv *ItemView) NavigateDown() {
@@ -341,13 +359,56 @@ func (iv *ItemView) getAvailableFileName(baseName string) (result string) {
 	return
 }
 
-func (iv *ItemView) setActiveByName(name string) {
+func (iv *ItemView) itemsToNames() []string {
+	result := make([]string, len(iv.Items))
+
 	for index, item := range iv.Items {
-		if item.Name == name {
-			iv.ActiveItem = int32(index)
-			break
+		result[index] = item.Name
+	}
+
+	return result
+}
+
+func (iv *ItemView) getSelectedItems() (result []string) {
+	result = make([]string, iv.getSelectedItemsCount())
+	index := 0
+
+	for i := 0; i < len(iv.Items); i++ {
+		if iv.Items[i].IsSelected {
+			result[index] = iv.Items[i].Name
+			index++
 		}
 	}
+
+	return
+}
+
+func (iv *ItemView) getSelectedItemsPaths() (result []string) {
+	result = make([]string, iv.getSelectedItemsCount())
+	index := 0
+
+	for i := 0; i < len(iv.Items); i++ {
+		if iv.Items[i].IsSelected {
+			result[index] = path.Join(iv.CurrentPath, iv.Items[i].Name)
+			index++
+		}
+	}
+
+	return
+}
+
+func (iv *ItemView) getSelectedItemsPathsAndNames() (result []string) {
+	result = make([]string, iv.getSelectedItemsCount())
+	index := 0
+
+	for i := 0; i < len(iv.Items); i++ {
+		if iv.Items[i].IsSelected {
+			result[index] = path.Join(iv.CurrentPath, iv.Items[i].Name) + "|" + iv.Items[i].Name
+			index++
+		}
+	}
+
+	return
 }
 
 func (iv *ItemView) CreateNewFile() {
@@ -361,7 +422,7 @@ func (iv *ItemView) CreateNewFile() {
 
 	// // @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
-	iv.setActiveByName(name)
+	iv.SetActiveByName(name)
 	// // @TODO maybe automatically initiate rename of the new item
 }
 
@@ -379,7 +440,7 @@ func (iv *ItemView) CreateNewFolder(updateView bool) string {
 		iv.ShowFolder(iv.CurrentPath)
 	}
 
-	iv.setActiveByName(name)
+	iv.SetActiveByName(name)
 	// @TODO maybe automatically initiate rename of the new item
 
 	return name
@@ -409,7 +470,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 	iv.SelectionMode = false
 
 	iv.ShowFolder(iv.CurrentPath)
-	iv.setActiveByName(newFolderName)
+	iv.SetActiveByName(newFolderName)
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -485,6 +546,8 @@ func (iv *ItemView) Tick(input *Input) {
 		iv.CreateNewFolder(true)
 	case '`':
 		iv.App.SelectFavorite(iv.Favorites)
+	case '/':
+		iv.App.FindInCurrentFolder(iv.itemsToNames())
 	}
 }
 

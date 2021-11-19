@@ -173,8 +173,14 @@ func (app *App) GoToDirectory(fullPath string) {
 }
 
 func (app *App) SelectFavorite(favorites []string) {
-	app.QuickOpen.Open(favorites, func(value string) {
-		app.GoToDirectory(value)
+	app.QuickOpen.Open(favorites, func(favorite string) {
+		app.GoToDirectory(favorite)
+	})
+}
+
+func (app *App) FindInCurrentFolder(items []string) {
+	app.QuickOpen.Open(items, func(item string) {
+		app.ItemView.OpenFolder(item)
 	})
 }
 

@@ -6,6 +6,8 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
+// @TODO (!important) when query is lowercase, then search case insensitive, otherwise case sensitive
+
 type QuickOpen struct {
 	IsOpen            bool
 	MaxItems          int32
