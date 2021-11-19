@@ -390,7 +390,6 @@ func (iv *ItemView) GroupSelectedFiles() {
 		return
 	}
 
-	// @TODO (!important) this might not produce a folder named "New Folder". The name of the folder might be different
 	newFolderName := iv.CreateNewFolder(false)
 
 	for i := 0; i < len(iv.Items); i++ {

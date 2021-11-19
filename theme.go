@@ -9,6 +9,8 @@ import (
 )
 
 // @TODO (!important) support custom icons
+// @TODO (!important) support custom path separator for breadcrumbs
+// @TODO (!important) support item borders in item view
 
 type Subtheme map[string]interface{}
 

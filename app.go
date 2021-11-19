@@ -45,7 +45,8 @@ type App struct {
 	QuickOpen
 	Notification
 
-	Mode Mode
+	Mode      Mode
+	LastError NotificationEvent
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
@@ -115,7 +116,6 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) D to duplicate a file
 	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
-	// @TODO (!important) alt + e to show the last error
 
 	app.ItemView.Tick(input)
 
@@ -126,6 +126,10 @@ func (app *App) handleInputNormal(input *Input) {
 	switch input.TypedCharacter {
 	case ':':
 		app.Mode = Mode_Drive_Selection
+	case 'e':
+		if input.Alt {
+			app.ShowNotification(app.LastError)
+		}
 	}
 }
 
@@ -176,6 +180,10 @@ func (app *App) SelectFavorite(favorites []string) {
 
 func (app *App) ShowNotification(event NotificationEvent) {
 	app.Notification.Show(event)
+
+	if event.Type == NotificationError {
+		app.LastError = event
+	}
 }
 
 func (app *App) Render(renderer *sdl.Renderer) {
