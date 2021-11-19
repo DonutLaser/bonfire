@@ -68,6 +68,8 @@ func (q *QuickOpen) Submit() {
 		q.OnSubmit(q.Results[q.ActiveItem])
 	}
 
+	q.ActiveItemChanged = false
+
 	q.Close()
 }
 
