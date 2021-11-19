@@ -554,11 +554,11 @@ func (iv *ItemView) Tick(input *Input) {
 	}
 
 	if input.Backspace {
-		// @TODO (!important) this should retain the last position so that when you go back, the active item doesn't always become 0
 		crumb := iv.App.Breadcrumbs.Pop()
 		if crumb != "" {
 			iv.GoOutside()
 		}
+
 		return
 	}
 
