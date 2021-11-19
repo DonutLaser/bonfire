@@ -157,14 +157,9 @@ func (app *App) GoToDrive(drive byte) {
 	}
 }
 
-func (app *App) GoToDirectory(fullPath string) {
-	app.Breadcrumbs.Set(fullPath)
-	app.ItemView.ShowFolder(fullPath)
-}
-
 func (app *App) SelectFavorite(favorites []string) {
 	app.QuickOpen.Open(favorites, func(favorite string) {
-		app.GoToDirectory(favorite)
+		app.ItemView.OpenPath(favorite)
 	})
 }
 

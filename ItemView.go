@@ -24,6 +24,11 @@ type Clipboard struct {
 	Type     ItemType
 }
 
+type Favorite struct {
+	FullPath string
+	Type     ItemType
+}
+
 type Item struct {
 	Type ItemType
 	Name string
@@ -39,7 +44,7 @@ type ItemView struct {
 	ActiveColumn int32
 	CurrentPath  string
 
-	Favorites []string
+	Favorites []Favorite
 	Clipboard
 
 	Rect              sdl.Rect
@@ -130,8 +135,7 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	iv.Items = append(iv.Items, files...)
 
 	for index, item := range iv.Items {
-		p := path.Join(fullPath, item.Name)
-		iv.Items[index].IsFavorite = IndexOf(iv.Favorites, p) >= 0
+		iv.Items[index].IsFavorite = iv.favoriteIndex(path.Join(fullPath, item.Name)) >= 0
 	}
 
 	iv.Columns = int32(len(iv.Items)) / iv.MaxItemsPerColumn
@@ -141,6 +145,33 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	iv.CurrentPath = fullPath
 
 	return true
+}
+
+func (iv *ItemView) OpenPath(fullPath string) {
+	index := iv.favoriteIndex(fullPath)
+	if index < 0 {
+		return
+	}
+
+	favorite := iv.Favorites[index]
+	if favorite.Type == Item_Type_Folder {
+		iv.App.Breadcrumbs.Set(fullPath)
+		iv.ShowFolder(fullPath)
+	} else if favorite.Type == Item_Type_File {
+		p := path.Dir(fullPath)
+
+		if strings.HasSuffix(p, ":") {
+			p += "/"
+		}
+
+		iv.App.Breadcrumbs.Set(p)
+		iv.ShowFolder(p)
+
+		base := path.Base(fullPath)
+
+		iv.SetActiveByName(base)
+		iv.OpenFile(base)
+	}
 }
 
 func (iv *ItemView) OpenItem(name string) {
@@ -230,8 +261,6 @@ func (iv *ItemView) GoInside() (result string) {
 	if item.Type == Item_Type_Folder {
 		iv.ShowFolder(path.Join(iv.CurrentPath, item.Name))
 		result = item.Name
-	} else {
-		iv.OpenFile(item.Name)
 	}
 
 	return
@@ -253,9 +282,10 @@ func (iv *ItemView) GoOutside() {
 func (iv *ItemView) MarkActiveAsFavorite() {
 	if iv.Items[iv.ActiveItem].IsFavorite {
 		iv.Items[iv.ActiveItem].IsFavorite = false
-		iv.Favorites = Remove(iv.Favorites, path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
+		iv.RemoveFavorite(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 	} else {
-		iv.Favorites = append(iv.Favorites, path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
+		item := iv.Items[iv.ActiveItem]
+		iv.Favorites = append(iv.Favorites, Favorite{FullPath: path.Join(iv.CurrentPath, item.Name), Type: item.Type})
 		iv.Items[iv.ActiveItem].IsFavorite = true
 	}
 }
@@ -445,6 +475,16 @@ func (iv *ItemView) itemsToNames() []string {
 	return result
 }
 
+func (iv *ItemView) favoritesToPaths() []string {
+	result := make([]string, len(iv.Favorites))
+
+	for index, item := range iv.Favorites {
+		result[index] = item.FullPath
+	}
+
+	return result
+}
+
 func (iv *ItemView) getSelectedItems() (result []string) {
 	result = make([]string, iv.getSelectedItemsCount())
 	index := 0
@@ -485,6 +525,25 @@ func (iv *ItemView) getSelectedItemsPathsAndNames() (result []string) {
 	}
 
 	return
+}
+
+func (iv *ItemView) favoriteIndex(fullPath string) int {
+	for index, favorite := range iv.Favorites {
+		if favorite.FullPath == fullPath {
+			return index
+		}
+	}
+
+	return -1
+}
+
+func (iv *ItemView) RemoveFavorite(fullPath string) {
+	for i, favorite := range iv.Favorites {
+		if favorite.FullPath == fullPath {
+			iv.Favorites = append(iv.Favorites[:i], iv.Favorites[i+1:]...)
+			break
+		}
+	}
 }
 
 func (iv *ItemView) CreateNewFile() {
@@ -631,7 +690,7 @@ func (iv *ItemView) Tick(input *Input) {
 	case 'I':
 		iv.CreateNewFolder(true)
 	case '`':
-		iv.App.SelectFavorite(iv.Favorites)
+		iv.App.SelectFavorite(iv.favoritesToPaths())
 	case '/':
 		iv.App.FindInCurrentFolder(iv.itemsToNames())
 	}
@@ -649,11 +708,7 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 
 	switch input.TypedCharacter {
 	case 'd':
-		activeFolder := iv.GoInside()
-		if activeFolder != "" {
-			iv.App.Breadcrumbs.Push(activeFolder)
-		}
-
+		iv.OpenItem(iv.Items[iv.ActiveItem].Name)
 		iv.Mode = Mode_Normal
 	case 'g':
 		iv.App.ItemView.NavigateFirstInColumn()
