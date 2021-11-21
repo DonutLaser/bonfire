@@ -56,7 +56,12 @@ func LoadTheme(themeName string) (result *Theme) {
 			}
 		} else {
 			key, value := getKeyValue(line)
-			currentSubtheme[key] = getColor(value)
+
+			if strings.HasPrefix(value, "\"") {
+				currentSubtheme[key] = strings.Trim(value, "\"")
+			} else {
+				currentSubtheme[key] = getColor(value)
+			}
 		}
 	}
 
@@ -69,6 +74,14 @@ func GetColor(subtheme Subtheme, key string) sdl.Color {
 	}
 
 	return sdl.Color{R: 255, G: 0, B: 255, A: 255}
+}
+
+func GetString(subtheme Subtheme, key string) string {
+	if value, ok := subtheme[key]; ok {
+		return value.(string)
+	}
+
+	return " > "
 }
 
 func getKeyValue(text string) (key string, value string) {

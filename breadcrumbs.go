@@ -49,20 +49,22 @@ func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font, theme Subtheme)
 	DrawRect3D(renderer, &b.Rect, GetColor(theme, "background_color"))
 
 	if len(b.Path) > 0 {
-		fullPath := strings.Join(b.Path, " > ")
+		symbol := GetString(theme, "separator_symbol")
+
+		fullPath := strings.Join(b.Path, symbol)
 		pathWidth := font.GetStringWidth(fullPath)
 
 		cursorX := b.Rect.X + (b.Rect.W-pathWidth)/2
 		cursorY := b.Rect.Y + (b.Rect.H-font.Size)/2
 
-		joinWidth := font.GetStringWidth(" > ")
+		joinWidth := font.GetStringWidth(symbol)
 
 		for index, path := range b.Path {
 			width := font.GetStringWidth(path)
 
 			DrawText(renderer, font, path, &sdl.Rect{X: cursorX, Y: cursorY, W: width, H: font.Size}, GetColor(theme, "path_color"))
 			if index < len(b.Path)-1 {
-				DrawText(renderer, font, " > ", &sdl.Rect{X: cursorX + width, Y: cursorY, W: joinWidth, H: font.Size}, GetColor(theme, "separator_color"))
+				DrawText(renderer, font, symbol, &sdl.Rect{X: cursorX + width, Y: cursorY, W: joinWidth, H: font.Size}, GetColor(theme, "separator_color"))
 				cursorX += joinWidth
 			}
 

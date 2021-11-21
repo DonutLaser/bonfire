@@ -1,0 +1,35 @@
+@Breadcrumbs
+background_color = 13 13 13
+path_color = 232 129 37
+separator_color = 232 193 37
+separator_symbol = " / "
+
+@ItemView
+background_color = 13 13 13
+folder_color = 232 129 37
+file_color = 174 84 52
+active_folder_color = 232 129 37
+active_file_color = 174 84 52
+active_background_color = 46 26 16
+selected_folder_color = 232 129 37
+selected_file_color = 174 84 52
+selected_background_color = 92 22 22
+favorite_icon_color = 232 37 37
+
+@InputField
+background_color = 46 26 16
+inset_color = 13 13 13
+text_color = 232 193 37
+cursor_color = 232 37 37
+
+@QuickOpen
+background_color = 46 26 16
+item_color = 174 84 52
+active_item_color = 174 84 52
+active_item_background_color = 92 22 22
+
+@Notification
+background_color = 46 26 16
+error_color = 232 37 37
+warning_color = 232 193 37
+info_color = 167 163 163

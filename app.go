@@ -42,7 +42,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
-	result.Theme = *LoadTheme("default")
+	result.Theme = *LoadTheme("bonfire")
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
@@ -65,6 +65,10 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 
 func (app *App) Close() {
 	app.Font.Unload()
+}
+
+func (app *App) GetIcon() *sdl.Surface {
+	return LoadIcon("assets/images/icon.png")
 }
 
 func (app *App) Resize(windowWidth int32, windowHeight int32) {
