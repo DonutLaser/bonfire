@@ -4,7 +4,6 @@ import (
 	"os"
 	"path"
 	"sort"
-	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -18,14 +17,6 @@ type ItemType int32
 const (
 	ItemType_File ItemType = iota
 	ItemType_Folder
-)
-
-type FileType int32
-
-const (
-	FileType_Default = iota
-	FileType_Exe     = iota
-	FileType_Image   = iota
 )
 
 type Clipboard struct {
@@ -103,18 +94,7 @@ func (iv *ItemView) SetActiveByName(name string) {
 }
 
 func (iv *ItemView) ShowFolder(fullPath string) bool {
-	dir, err := os.Open(fullPath)
-	if err != nil {
-		NotifyError(err.Error())
-		return false
-	}
-	defer dir.Close()
-
-	items, err := dir.Readdir(-1)
-	if err != nil {
-		NotifyError(err.Error())
-		return false
-	}
+	items := ReadDirectory(fullPath)
 
 	var files []Item
 	var folders []Item
@@ -160,14 +140,22 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 }
 
 func (iv *ItemView) GetActiveFileInfo() (result Info) {
-	fullPath := path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
+	item := iv.Items[iv.ActiveItem]
+
+	fullPath := path.Join(iv.CurrentPath, item.Name)
 	stats, err := os.Stat(fullPath)
 	if err != nil {
 		NotifyError(err.Error())
 	}
 
 	result.Name = iv.Items[iv.ActiveItem].Name
-	result.Size = bytesToString(stats.Size())
+
+	if item.Type == ItemType_Folder {
+		result.Size = bytesToString(GetDirectorySize(path.Join(iv.CurrentPath, item.Name)))
+	} else {
+		result.Size = bytesToString(stats.Size())
+	}
+
 	result.Created = time.Unix(0, stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()).Format("2006-01-02 15:05:05")
 	result.Modified = stats.ModTime().Format("2006-01-02 15:04:05")
 
@@ -374,17 +362,8 @@ func (iv *ItemView) Paste() {
 	if iv.Clipboard.Type == ItemType_Folder {
 		// @TODO (!important) implement pasting a folder
 	} else if iv.Clipboard.Type == ItemType_File {
-		name := iv.getAvailableFileName(iv.Clipboard.Name)
-
-		data, err := os.ReadFile(iv.Clipboard.FullPath)
-		if err != nil {
-			NotifyError(err.Error())
-			return
-		}
-
-		err = os.WriteFile(path.Join(iv.CurrentPath, name), data, 0644)
-		if err != nil {
-			NotifyError(err.Error())
+		success, name := DuplicateFile(iv.Clipboard.FullPath, iv.Clipboard.Name)
+		if !success {
 			return
 		}
 
@@ -465,27 +444,6 @@ func (iv *ItemView) getSelectedItemsCount() (result int32) {
 	for i := 0; i < len(iv.Items); i++ {
 		if iv.Items[i].IsSelected {
 			result++
-		}
-	}
-
-	return
-}
-
-func (iv *ItemView) getAvailableFileName(baseName string) (result string) {
-	// @TODO (!important) this should not add the numbers after the extension making the extension unusable
-
-	fullPath := path.Join(iv.CurrentPath, baseName)
-
-	fileDoesNotExist := true
-	count := 0
-	for fileDoesNotExist {
-		_, err := os.Stat(fullPath)
-		if err == nil {
-			count += 1
-			fullPath = path.Join(iv.CurrentPath, baseName+" ("+strconv.Itoa(count)+")")
-		} else {
-			fileDoesNotExist = false
-			result = baseName + " (" + strconv.Itoa(count) + ")"
 		}
 	}
 
@@ -589,11 +547,8 @@ func (iv *ItemView) RemoveFavorite(fullPath string) {
 }
 
 func (iv *ItemView) CreateNewFile() {
-	name := iv.getAvailableFileName("New File")
-
-	err := os.WriteFile(path.Join(iv.CurrentPath, name), []byte(""), 0644)
-	if err != nil {
-		NotifyError(err.Error())
+	success, name := CreateNewFile(iv.CurrentPath)
+	if !success {
 		return
 	}
 
@@ -604,11 +559,8 @@ func (iv *ItemView) CreateNewFile() {
 }
 
 func (iv *ItemView) CreateNewFolder(updateView bool) string {
-	name := iv.getAvailableFileName("New Folder")
-
-	err := os.Mkdir(path.Join(iv.CurrentPath, name), 0755)
-	if err != nil {
-		NotifyError(err.Error())
+	success, name := CreateNewFolder(iv.CurrentPath)
+	if !success {
 		return ""
 	}
 
