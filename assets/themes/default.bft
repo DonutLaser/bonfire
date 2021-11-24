@@ -7,6 +7,8 @@ separator_color = 216 216 216
 background_color = 20 27 39
 folder_color = 254 203 0
 file_color = 216 216 216
+exe_color = 60 148 239
+image_color = 216 72 229
 active_folder_color = 254 203 0
 active_file_color = 216 216 216
 active_background_color = 44 50 61
@@ -32,3 +34,9 @@ background_color = 28 36 51
 error_color = 227 36 36
 warning_color = 226 188 35
 info_color = 236 236 236
+
+@InfoView
+background_color = 28 36 51
+inset_color = 20 27 39
+header_color = 254 203 0
+info_color = 216 216 216

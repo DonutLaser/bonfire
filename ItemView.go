@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/skratchdot/open-golang/open"
 	"github.com/veandco/go-sdl2/sdl"
@@ -14,8 +16,16 @@ import (
 type ItemType int32
 
 const (
-	Item_Type_File ItemType = iota
-	Item_Type_Folder
+	ItemType_File ItemType = iota
+	ItemType_Folder
+)
+
+type FileType int32
+
+const (
+	FileType_Default = iota
+	FileType_Exe     = iota
+	FileType_Image   = iota
 )
 
 type Clipboard struct {
@@ -30,8 +40,9 @@ type Favorite struct {
 }
 
 type Item struct {
-	Type ItemType
-	Name string
+	Type     ItemType
+	FileType FileType
+	Name     string
 
 	IsSelected       bool
 	IsFavorite       bool
@@ -111,13 +122,14 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	for _, file := range items {
 		if file.IsDir() {
 			folders = append(folders, Item{
-				Type: Item_Type_Folder,
+				Type: ItemType_Folder,
 				Name: file.Name(),
 			})
 		} else {
 			files = append(files, Item{
-				Type: Item_Type_File,
-				Name: file.Name(),
+				Type:     ItemType_File,
+				Name:     file.Name(),
+				FileType: FileType(iv.getFileType(file.Name())),
 			})
 		}
 	}
@@ -147,6 +159,21 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	return true
 }
 
+func (iv *ItemView) GetActiveFileInfo() (result Info) {
+	fullPath := path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
+	stats, err := os.Stat(fullPath)
+	if err != nil {
+		NotifyError(err.Error())
+	}
+
+	result.Name = iv.Items[iv.ActiveItem].Name
+	result.Size = bytesToString(stats.Size())
+	result.Created = time.Unix(0, stats.Sys().(*syscall.Win32FileAttributeData).CreationTime.Nanoseconds()).Format("2006-01-02 15:05:05")
+	result.Modified = stats.ModTime().Format("2006-01-02 15:04:05")
+
+	return
+}
+
 func (iv *ItemView) OpenPath(fullPath string) {
 	index := iv.favoriteIndex(fullPath)
 	if index < 0 {
@@ -154,10 +181,10 @@ func (iv *ItemView) OpenPath(fullPath string) {
 	}
 
 	favorite := iv.Favorites[index]
-	if favorite.Type == Item_Type_Folder {
+	if favorite.Type == ItemType_Folder {
 		iv.App.Breadcrumbs.Set(fullPath)
 		iv.ShowFolder(fullPath)
-	} else if favorite.Type == Item_Type_File {
+	} else if favorite.Type == ItemType_File {
 		p := path.Dir(fullPath)
 
 		if strings.HasSuffix(p, ":") {
@@ -177,9 +204,9 @@ func (iv *ItemView) OpenPath(fullPath string) {
 func (iv *ItemView) OpenItem(name string) {
 	iv.SetActiveByName(name)
 
-	if iv.Items[iv.ActiveItem].Type == Item_Type_Folder {
+	if iv.Items[iv.ActiveItem].Type == ItemType_Folder {
 		iv.OpenFolder(name)
-	} else if iv.Items[iv.ActiveItem].Type == Item_Type_File {
+	} else if iv.Items[iv.ActiveItem].Type == ItemType_File {
 		iv.OpenFile(name)
 	}
 }
@@ -258,7 +285,7 @@ func (iv *ItemView) GoInside() (result string) {
 
 	item := iv.Items[iv.ActiveItem]
 
-	if item.Type == Item_Type_Folder {
+	if item.Type == ItemType_Folder {
 		iv.ShowFolder(path.Join(iv.CurrentPath, item.Name))
 		result = item.Name
 	}
@@ -344,9 +371,9 @@ func (iv *ItemView) CopyActive(showNotification bool) {
 }
 
 func (iv *ItemView) Paste() {
-	if iv.Clipboard.Type == Item_Type_Folder {
+	if iv.Clipboard.Type == ItemType_Folder {
 		// @TODO (!important) implement pasting a folder
-	} else if iv.Clipboard.Type == Item_Type_File {
+	} else if iv.Clipboard.Type == ItemType_File {
 		name := iv.getAvailableFileName(iv.Clipboard.Name)
 
 		data, err := os.ReadFile(iv.Clipboard.FullPath)
@@ -367,9 +394,9 @@ func (iv *ItemView) Paste() {
 }
 
 func (iv *ItemView) DuplicateActive() {
-	if iv.Items[iv.ActiveItem].Type == Item_Type_Folder {
+	if iv.Items[iv.ActiveItem].Type == ItemType_Folder {
 
-	} else if iv.Items[iv.ActiveItem].Type == Item_Type_File {
+	} else if iv.Items[iv.ActiveItem].Type == ItemType_File {
 		iv.CopyActive(false)
 		iv.Paste()
 	}
@@ -483,6 +510,21 @@ func (iv *ItemView) favoritesToPaths() []string {
 	}
 
 	return result
+}
+
+func (iv *ItemView) getFileType(filename string) int32 {
+	if strings.HasSuffix(filename, ".exe") {
+		return FileType_Exe
+	}
+
+	imageExtensions := []string{".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico"}
+	for _, ext := range imageExtensions {
+		if strings.HasSuffix(filename, ext) {
+			return FileType_Image
+		}
+	}
+
+	return FileType_Default
 }
 
 func (iv *ItemView) getSelectedItems() (result []string) {
@@ -713,6 +755,9 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 	case 'g':
 		iv.App.ItemView.NavigateFirstInColumn()
 		iv.Mode = Mode_Normal
+	case 'h':
+		iv.App.ShowFileInfo(iv.GetActiveFileInfo())
+		iv.Mode = Mode_Normal
 	default:
 		iv.Mode = Mode_Normal
 	}
@@ -763,22 +808,26 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 				}
 
 				color := GetColor(ivTheme, "file_color")
-				if item.Type == Item_Type_Folder {
+				if item.Type == ItemType_Folder {
 					color = GetColor(ivTheme, "folder_color")
+				} else if item.FileType == FileType_Exe {
+					color = GetColor(ivTheme, "exe_color")
+				} else if item.FileType == FileType_Image {
+					color = GetColor(ivTheme, "image_color")
 				}
 
 				if itemIndex == int(iv.ActiveItem) {
 					DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
 
 					color = GetColor(ivTheme, "active_file_color")
-					if item.Type == Item_Type_Folder {
+					if item.Type == ItemType_Folder {
 						color = GetColor(ivTheme, "active_folder_color")
 					}
 				} else if item.IsSelected {
 					DrawRect(renderer, &rect, GetColor(ivTheme, "selected_background_color"))
 
 					color = GetColor(ivTheme, "selected_file_color")
-					if item.Type == Item_Type_Folder {
+					if item.Type == ItemType_Folder {
 						color = GetColor(ivTheme, "selected_folder_color")
 					}
 				}

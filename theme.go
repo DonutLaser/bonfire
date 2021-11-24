@@ -20,6 +20,7 @@ type Theme struct {
 	InputFieldTheme   Subtheme
 	QuickOpenTheme    Subtheme
 	NotificationTheme Subtheme
+	InfoViewTheme     Subtheme
 }
 
 func LoadTheme(themeName string) (result *Theme) {
@@ -31,6 +32,7 @@ func LoadTheme(themeName string) (result *Theme) {
 		InputFieldTheme:   Subtheme{},
 		QuickOpenTheme:    Subtheme{},
 		NotificationTheme: Subtheme{},
+		InfoViewTheme:     Subtheme{},
 	}
 	currentSubtheme := result.BreadcrumbsTheme
 
@@ -53,6 +55,8 @@ func LoadTheme(themeName string) (result *Theme) {
 				currentSubtheme = result.QuickOpenTheme
 			} else if strings.Contains(line, "Notification") {
 				currentSubtheme = result.NotificationTheme
+			} else if strings.Contains(line, "InfoView") {
+				currentSubtheme = result.InfoViewTheme
 			}
 		} else {
 			key, value := getKeyValue(line)

@@ -33,6 +33,7 @@ type App struct {
 	ItemView
 	QuickOpen
 	Notification
+	InfoView
 
 	Mode      Mode
 	LastError NotificationEvent
@@ -42,7 +43,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
-	result.Theme = *LoadTheme("bonfire")
+	result.Theme = *LoadTheme("default")
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
@@ -52,6 +53,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
+	result.InfoView = *NewInfoView()
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
@@ -83,6 +85,10 @@ func (app *App) Tick(input *Input) {
 		app.Notification.Tick()
 	}
 
+	if app.InfoView.IsOpen {
+		app.InfoView.Tick(input)
+	}
+
 	if app.QuickOpen.IsOpen {
 		app.QuickOpen.Tick(input)
 		return
@@ -101,9 +107,6 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) p to paste a folder
 	// @TODO (!important) P to paste an item contents (files if copying folder), shouldn't do anything for copied files
 	// @TODO (!important) ctrl + h to toggle visibility of hidden items
-	// @TODO (!important) c to change an extension
-	// @TODO (!important) M to mark the parent folder as favorite
-	// @TODO (!important) ctrl + shift + o to open any file or folder by writing a full path
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
 
@@ -177,6 +180,10 @@ func (app *App) ShowNotification(event NotificationEvent) {
 	}
 }
 
+func (app *App) ShowFileInfo(info Info) {
+	app.InfoView.Show(info)
+}
+
 func (app *App) Render(renderer *sdl.Renderer) {
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.Clear()
@@ -186,6 +193,10 @@ func (app *App) Render(renderer *sdl.Renderer) {
 
 	if app.Notification.IsOpen {
 		app.Notification.Render(renderer, app)
+	}
+
+	if app.InfoView.IsOpen {
+		app.InfoView.Render(renderer, app)
 	}
 
 	if app.QuickOpen.IsOpen {
