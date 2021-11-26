@@ -25,6 +25,13 @@ func ReadFile(fullPath string) string {
 	return string(contents)
 }
 
+func WriteFile(fullPath string, contents string) {
+	err := os.WriteFile(fullPath, []byte(contents), 0644)
+	if err != nil {
+		NotifyError(err.Error())
+	}
+}
+
 func ReadDirectory(fullPath string) []fs.DirEntry {
 	dir, err := os.Open(fullPath)
 	if err != nil {
@@ -42,7 +49,6 @@ func ReadDirectory(fullPath string) []fs.DirEntry {
 	return items
 }
 
-// @TODO (!important) This lags like hell if the directory is big
 func GetDirectorySize(fullPath string) (result int64) {
 	items := ReadDirectory(fullPath)
 	for _, item := range items {
@@ -118,8 +124,8 @@ func CreateNewFile(dirname string) (bool, string) {
 	return true, name
 }
 
-func CreateNewFolder(dirname string) (bool, string) {
-	name := GetAvailableFileName(dirname, "New Folder")
+func CreateNewFolder(dirname string, defaultName string) (bool, string) {
+	name := GetAvailableFileName(dirname, defaultName)
 
 	err := os.Mkdir(path.Join(dirname, name), 0755)
 	if err != nil {
@@ -128,5 +134,23 @@ func CreateNewFolder(dirname string) (bool, string) {
 	}
 
 	return true, name
+}
 
+func DoesFileExist(fullPath string) bool {
+	_, err := os.Stat(fullPath)
+	return err == nil
+}
+
+func GetFileType(fullPath string) ItemType {
+	stat, err := os.Stat(fullPath)
+	if err != nil {
+		NotifyError(err.Error())
+		return ItemTypeFile
+	}
+
+	if stat.IsDir() {
+		return ItemTypeFolder
+	}
+
+	return ItemTypeFile
 }

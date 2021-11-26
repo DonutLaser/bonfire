@@ -37,6 +37,7 @@ type App struct {
 
 	Mode      Mode
 	LastError NotificationEvent
+	Settings
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
@@ -57,6 +58,9 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
+	result.Settings = NewSettings()
+
+	result.ItemView.SetFavorites(result.Settings.Favorites)
 
 	globalNotificationHandler = func(e NotificationEvent) {
 		result.ShowNotification(e)
@@ -66,6 +70,8 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 }
 
 func (app *App) Close() {
+	// @TODO (!important) What if the program is closed in such a way that Save function is not called?
+	app.Settings.Save(false)
 	app.Font.Unload()
 }
 
@@ -182,6 +188,11 @@ func (app *App) ShowNotification(event NotificationEvent) {
 
 func (app *App) ShowFileInfo(info Info) {
 	app.InfoView.Show(info)
+}
+
+// Used when the size is calculated in another thread
+func (app *App) SetFileInfoSize(size string) {
+	app.InfoView.Info.Size = size
 }
 
 func (app *App) Render(renderer *sdl.Renderer) {
