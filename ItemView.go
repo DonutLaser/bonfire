@@ -235,28 +235,28 @@ func (iv *ItemView) OpenFile(name string) {
 }
 
 func (iv *ItemView) NavigateDown() {
-	if iv.ActiveItem < int32(len(iv.Items)-1) {
+	if iv.ActiveItem < int32(len(iv.Items)-1) && iv.ActiveItem < iv.MaxItemsPerColumn*(iv.ActiveColumn+1)-1 {
 		iv.ActiveItem++
 		iv.updateSelection()
 	}
 }
 
 func (iv *ItemView) NavigateUp() {
-	if iv.ActiveItem > 0 {
+	if iv.ActiveItem > iv.MaxItemsPerColumn*iv.ActiveColumn {
 		iv.ActiveItem--
 		iv.updateSelection()
 	}
 }
 
 func (iv *ItemView) NavigateRight() {
-	if iv.ActiveColumn >= iv.Columns {
+	if iv.ActiveColumn >= iv.Columns-1 {
 		return
 	}
 
 	iv.ActiveColumn++
 
 	if iv.ActiveItem+iv.MaxItemsPerColumn >= int32(len(iv.Items)) {
-		iv.ActiveColumn--
+		iv.ActiveItem = int32(len(iv.Items) - 1)
 	} else {
 		iv.ActiveItem += iv.MaxItemsPerColumn
 	}

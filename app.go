@@ -180,6 +180,7 @@ func (app *App) SelectFavorite(favorites []string) {
 }
 
 func (app *App) SelectTheme(themes []string) {
+	// @TODO (!important) should show preview when hovering over a theme
 	app.QuickOpen.Open(themes, func(theme string) {
 		app.Theme = *LoadTheme(theme)
 		app.Settings.SetTheme(theme)

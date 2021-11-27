@@ -9,7 +9,6 @@ import (
 )
 
 // @TODO (!important) support custom icons
-// @TODO (!important) support item borders in item view
 // @TODO (!important) support active exe and image colors
 
 type Subtheme map[string]interface{}
