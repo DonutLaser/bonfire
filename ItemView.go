@@ -797,7 +797,13 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 				}
 
 				if itemIndex == int(iv.ActiveItem) {
-					DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
+					if HasColor(ivTheme, "active_background_color") {
+						DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
+					}
+
+					if HasColor(ivTheme, "active_background_border") {
+						DrawRectOutline(renderer, &rect, GetColor(ivTheme, "active_background_border"))
+					}
 
 					color = GetColor(ivTheme, "active_file_color")
 					if item.Type == ItemTypeFolder {

@@ -1,42 +1,42 @@
 @Breadcrumbs
-background_color = 20 27 39
-path_color = 254 203 0
+background_color = 27 33 43
+path_color = 252 200 50
 separator_color = 216 216 216 
 
 @ItemView
-background_color = 20 27 39
-folder_color = 254 203 0
+background_color = 27 33 43
+folder_color = 252 200 50
 file_color = 216 216 216
 exe_color = 60 148 239
 image_color = 216 72 229
-active_folder_color = 254 203 0
+active_folder_color = 252 200 50
 active_file_color = 216 216 216
-active_background_color = 44 50 61
-selected_folder_color = 254 203 0
+active_background_color = 48 53 63
+selected_folder_color = 252 200 50
 selected_file_color = 216 216 216
-selected_background_color = 28 53 96
-favorite_icon_color = 254 108 0
+selected_background_color = 36 57 95
+favorite_icon_color = 252 105 31
 
 @InputField
-background_color = 20 27 39
+background_color = 27 33 43
 inset_color = 15 20 30 
 text_color = 216 216 216
-cursor_color = 254 203 0
+cursor_color = 252 200 50
 
 @QuickOpen
-background_color = 20 27 39
+background_color = 27 33 43
 item_color = 216 216 216
 active_item_color = 216 216 216
-active_item_background_color = 44 50 61
+active_item_background_color = 48 53 63
 
 @Notification
-background_color = 28 36 51
+background_color = 27 33 43
 error_color = 227 36 36
 warning_color = 226 188 35
 info_color = 236 236 236
 
 @InfoView
-background_color = 28 36 51
-inset_color = 20 27 39
-header_color = 254 203 0
+background_color = 27 33 43
+inset_color = 15 20 30 
+header_color = 252 200 50
 info_color = 216 216 216

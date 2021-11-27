@@ -9,12 +9,13 @@ import (
 )
 
 // @TODO (!important) support custom icons
-// @TODO (!important) support custom path separator for breadcrumbs
 // @TODO (!important) support item borders in item view
+// @TODO (!important) support active exe and image colors
 
 type Subtheme map[string]interface{}
 
 type Theme struct {
+	Name              string
 	BreadcrumbsTheme  Subtheme
 	ItemViewTheme     Subtheme
 	InputFieldTheme   Subtheme
@@ -23,10 +24,23 @@ type Theme struct {
 	InfoViewTheme     Subtheme
 }
 
+func GetAvailableThemes() (result []string) {
+	files := ReadDirectory("./assets/themes")
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".bft") {
+			result = append(result, strings.TrimSuffix(file.Name(), ".bft"))
+		}
+	}
+
+	return
+}
+
 func LoadTheme(themeName string) (result *Theme) {
 	data := ReadFile(fmt.Sprintf("./assets/themes/%s.bft", themeName))
 
 	result = &Theme{
+		Name:              themeName,
 		BreadcrumbsTheme:  Subtheme{},
 		ItemViewTheme:     Subtheme{},
 		InputFieldTheme:   Subtheme{},
@@ -70,6 +84,11 @@ func LoadTheme(themeName string) (result *Theme) {
 	}
 
 	return
+}
+
+func HasColor(subtheme Subtheme, key string) bool {
+	_, ok := subtheme[key]
+	return ok
 }
 
 func GetColor(subtheme Subtheme, key string) sdl.Color {

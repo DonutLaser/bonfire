@@ -27,7 +27,8 @@ const (
 type App struct {
 	Font Font
 	Theme
-	WindowRect sdl.Rect
+	AvailableThemes []string
+	WindowRect      sdl.Rect
 
 	Breadcrumbs
 	ItemView
@@ -44,7 +45,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
-	result.Theme = *LoadTheme("default")
+	result.AvailableThemes = GetAvailableThemes()
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
@@ -59,6 +60,8 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
 	result.Settings = NewSettings()
+
+	result.Theme = *LoadTheme(result.Settings.ThemeName)
 
 	result.ItemView.SetFavorites(result.Settings.Favorites)
 
@@ -129,6 +132,10 @@ func (app *App) handleInputNormal(input *Input) {
 		if input.Alt {
 			app.ShowNotification(app.LastError)
 		}
+	case '.':
+		if input.Ctrl && input.Alt {
+			app.SelectTheme(app.AvailableThemes)
+		}
 	}
 }
 
@@ -169,6 +176,13 @@ func (app *App) GoToDrive(drive byte) {
 func (app *App) SelectFavorite(favorites []string) {
 	app.QuickOpen.Open(favorites, func(favorite string) {
 		app.ItemView.OpenPath(favorite)
+	})
+}
+
+func (app *App) SelectTheme(themes []string) {
+	app.QuickOpen.Open(themes, func(theme string) {
+		app.Theme = *LoadTheme(theme)
+		app.Settings.SetTheme(theme)
 	})
 }
 

@@ -131,6 +131,8 @@ func main() {
 	checkError(err)
 	defer ttf.Quit()
 
+	sdl.GLSetAttribute(sdl.GL_FRAMEBUFFER_SRGB_CAPABLE, 1)
+
 	window, err := sdl.CreateWindow("bonfire", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, 800, 600, sdl.WINDOW_RESIZABLE)
 	checkError(err)
 	defer window.Destroy()

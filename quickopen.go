@@ -159,7 +159,14 @@ func (q *QuickOpen) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, font *F
 
 		textColor := GetColor(theme, "item_color")
 		if i == int(q.ActiveItem) {
-			DrawRect(renderer, &baseItemRect, GetColor(theme, "active_item_background_color"))
+			if HasColor(theme, "active_item_background_color") {
+				DrawRect(renderer, &baseItemRect, GetColor(theme, "active_item_background_color"))
+			}
+
+			if HasColor(theme, "active_item_background_border") {
+				DrawRectOutline(renderer, &baseItemRect, GetColor(theme, "active_item_background_border"))
+			}
+
 			textColor = GetColor(theme, "active_item_color")
 		}
 

@@ -1,35 +1,43 @@
 @Breadcrumbs
-background_color = 13 13 13
-path_color = 232 129 37
+background_color = 21 21 21
+path_color = 229 126 52 
 separator_color = 232 193 37
 separator_symbol = " / "
 
 @ItemView
-background_color = 13 13 13
-folder_color = 232 129 37
-file_color = 174 84 52
-active_folder_color = 232 129 37
-active_file_color = 174 84 52
-active_background_color = 46 26 16
-selected_folder_color = 232 129 37
-selected_file_color = 174 84 52
-selected_background_color = 92 22 22
-favorite_icon_color = 232 37 37
+background_color = 21 21 21 
+folder_color = 229 126 52 
+file_color = 145 84 57
+exe_color = 210 210 210
+image_color = 255 231 133
+active_folder_color = 229 126 52 
+active_file_color = 145 84 57
+active_background_color = 49 32 24
+selected_folder_color = 229 126 52 
+selected_file_color = 145 84 57 
+selected_background_color = 92 27 29
+favorite_icon_color = 229 33 45 
 
 @InputField
-background_color = 46 26 16
-inset_color = 13 13 13
+background_color = 49 32 24 
+inset_color = 21 21 21 
 text_color = 232 193 37
-cursor_color = 232 37 37
+cursor_color = 229 33 45 
 
 @QuickOpen
-background_color = 46 26 16
-item_color = 174 84 52
-active_item_color = 174 84 52
-active_item_background_color = 92 22 22
+background_color = 49 32 24 
+item_color = 145 84 57 
+active_item_color = 145 84 57 
+active_item_background_color = 92 27 29
 
 @Notification
-background_color = 46 26 16
-error_color = 232 37 37
+background_color = 49 32 24 
+error_color = 229 33 45 
 warning_color = 232 193 37
 info_color = 167 163 163
+
+@InfoView
+background_color = 49 32 24 
+inset_color = 21 21 21 
+header_color = 229 126 52 
+info_color = 232 193 37

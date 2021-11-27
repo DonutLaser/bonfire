@@ -8,6 +8,7 @@ import (
 
 type Settings struct {
 	Favorites []string
+	ThemeName string
 }
 
 func NewSettings() Settings {
@@ -17,6 +18,7 @@ func NewSettings() Settings {
 
 		return Settings{
 			Favorites: []string{},
+			ThemeName: "terminal",
 		}
 	}
 
@@ -29,6 +31,7 @@ func NewSettings() Settings {
 
 	result := Settings{
 		Favorites: []string{},
+		ThemeName: "terminal",
 	}
 
 	result.Save(true)
@@ -49,6 +52,8 @@ func loadSettings(fullPath string) (result Settings) {
 
 		if strings.HasPrefix(line, ":favorite") {
 			result.Favorites = append(result.Favorites, line[10:])
+		} else if strings.HasPrefix(line, ":theme") {
+			result.ThemeName = line[7:]
 		}
 	}
 
@@ -63,6 +68,10 @@ func (s *Settings) Save(createFolder bool) {
 	}
 
 	var sb strings.Builder
+	sb.WriteString(":theme ")
+	sb.WriteString(s.ThemeName)
+	sb.WriteString("\n")
+
 	for _, favorite := range s.Favorites {
 		sb.WriteString(":favorite ")
 		sb.WriteString(favorite)
@@ -85,4 +94,8 @@ func (s *Settings) AddFavorite(fullPath string) {
 
 func (s *Settings) RemoveFavorite(fullPath string) {
 	s.Favorites = Remove(s.Favorites, fullPath)
+}
+
+func (s *Settings) SetTheme(themeName string) {
+	s.ThemeName = themeName
 }

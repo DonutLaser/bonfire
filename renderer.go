@@ -21,6 +21,20 @@ func DrawRect(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	renderer.FillRect(rect)
 }
 
+func DrawRectOutline(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
+	renderer.SetDrawColor(color.R, color.G, color.B, color.A)
+
+	top := sdl.Rect{X: rect.X, Y: rect.Y, W: rect.W, H: 1}
+	right := sdl.Rect{X: rect.X + rect.W - 1, Y: rect.Y, W: 1, H: rect.H}
+	bottom := sdl.Rect{X: rect.X, Y: rect.Y + rect.H - 1, W: rect.W, H: 1}
+	left := sdl.Rect{X: rect.X, Y: rect.Y, W: 1, H: rect.H}
+
+	renderer.FillRect(&top)
+	renderer.FillRect(&right)
+	renderer.FillRect(&bottom)
+	renderer.FillRect(&left)
+}
+
 func DrawRectTransparent(renderer *sdl.Renderer, rect *sdl.Rect, color sdl.Color) {
 	renderer.SetDrawBlendMode(sdl.BLENDMODE_BLEND)
 	DrawRect(renderer, rect, color)

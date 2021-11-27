@@ -1,0 +1,42 @@
+@Breadcrumbs
+background_color = 55 54 54
+path_color = 210 210 209
+separator_color = 140 140 140
+
+@ItemView
+background_color = 37 37 37
+folder_color = 198 198 198
+file_color = 142 142 142
+exe_color = 142 142 142
+image_color = 142 142 142
+active_folder_color = 255 255 255
+active_file_color = 255 255 255
+active_background_border = 255 255 255
+selected_folder_color = 198 198 198
+selected_file_color = 142 142 142
+selected_background_color = 73 73 73
+favorite_icon_color = 255 255 255
+
+@InputField
+background_color = 37 37 37
+inset_color = 28 28 28
+text_color = 198 198 198
+cursor_color = 255 255 255
+
+@QuickOpen
+background_color = 37 37 37
+item_color = 198 198 198
+active_item_color = 255 255 255
+active_item_background_border = 255 255 255
+
+@Notification
+background_color = 37 37 37
+error_color = 210 210 209
+warning_color = 210 210 209
+info_color = 210 210 209
+
+@InfoView
+background_color = 37 37 37
+inset_color = 28 28 28
+header_color = 210 210 209
+info_color = 140 140 140
