@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type FileType int32
@@ -32,25 +33,25 @@ func WriteFile(fullPath string, contents string) {
 	}
 }
 
-func ReadDirectory(fullPath string) []fs.DirEntry {
+func ReadDirectory(fullPath string) ([]fs.DirEntry, bool) {
 	dir, err := os.Open(fullPath)
 	if err != nil {
 		NotifyError(err.Error())
-		return []fs.DirEntry{}
+		return []fs.DirEntry{}, false
 	}
 	defer dir.Close()
 
 	items, err := dir.ReadDir(-1)
 	if err != nil {
 		NotifyError(err.Error())
-		return []fs.DirEntry{}
+		return []fs.DirEntry{}, false
 	}
 
-	return items
+	return items, true
 }
 
 func GetDirectorySize(fullPath string) (result int64) {
-	items := ReadDirectory(fullPath)
+	items, _ := ReadDirectory(fullPath)
 	for _, item := range items {
 		if item.IsDir() {
 			result += GetDirectorySize(path.Join(fullPath, item.Name()))
@@ -87,9 +88,10 @@ func DuplicateFile(dirname string, filename string) (bool, string) {
 }
 
 func GetAvailableFileName(dirName string, filename string) (result string) {
-	// @TODO (!important) this should not add the numbers after the extension making the extension unusable
-
 	fullPath := path.Join(dirName, filename)
+
+	extension := path.Ext(filename)
+	name := strings.TrimSuffix(path.Base(filename), extension)
 
 	fileDoesNotExist := true
 	count := 0
@@ -97,12 +99,12 @@ func GetAvailableFileName(dirName string, filename string) (result string) {
 		_, err := os.Stat(fullPath)
 		if err == nil {
 			count += 1
-			fullPath = path.Join(dirName, filename+" ("+strconv.Itoa(count)+")")
+			fullPath = path.Join(dirName, name+" ("+strconv.Itoa(count)+")"+extension)
 		} else {
 			fileDoesNotExist = false
 
 			if count > 0 {
-				result = filename + " (" + strconv.Itoa(count) + ")"
+				result = name + " (" + strconv.Itoa(count) + ")" + extension
 			} else {
 				result = filename
 			}
@@ -153,4 +155,16 @@ func GetFileType(fullPath string) ItemType {
 	}
 
 	return ItemTypeFile
+}
+
+func GetAvailableDrives() (result []string) {
+	for _, drive := range "ABCDEFGHIJKLMNOPQRSTUVWXYZ" {
+		file, err := os.Open(string(drive) + ":\\")
+		if err == nil {
+			result = append(result, string(drive))
+			file.Close()
+		}
+	}
+
+	return
 }

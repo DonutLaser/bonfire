@@ -6,8 +6,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) when query is lowercase, then search case insensitive, otherwise case sensitive
-
 type QuickOpen struct {
 	IsOpen            bool
 	MaxItems          int32
@@ -77,8 +75,11 @@ func (q *QuickOpen) OnInput(value string) {
 
 	lastCount := q.ItemsToShow
 
+	lowercase := strings.ToLower(value)
+
 	for _, item := range q.Items {
-		if strings.Contains(item, value) {
+		lowercaseItem := strings.ToLower(item)
+		if strings.Contains(lowercaseItem, lowercase) {
 			results = append(results, item)
 		}
 	}

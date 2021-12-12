@@ -10,7 +10,6 @@ import (
 // @TODO (!important) copy files and folders
 // @TODO (!important) advanced rename files and folders
 // @TODO (!important) show/hide hidden files
-// @TODO (!important) custom themes
 // @TODO (!important) tag files
 // @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
@@ -28,6 +27,7 @@ type App struct {
 	Font Font
 	Theme
 	AvailableThemes []string
+	AvailabelDrives []string
 	WindowRect      sdl.Rect
 
 	Breadcrumbs
@@ -46,11 +46,12 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
 	result.AvailableThemes = GetAvailableThemes()
+	result.AvailabelDrives = GetAvailableDrives()
 	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
 
-	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
+	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28}, result.AvailabelDrives)
 	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon, result)
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
@@ -128,6 +129,7 @@ func (app *App) handleInputNormal(input *Input) {
 	switch input.TypedCharacter {
 	case ':':
 		app.Mode = Mode_Drive_Selection
+		app.Breadcrumbs.ShowAvailableDrives(true)
 	case 'e':
 		if input.Alt {
 			app.ShowNotification(app.LastError)
@@ -140,6 +142,12 @@ func (app *App) handleInputNormal(input *Input) {
 }
 
 func (app *App) handleInputDriveSelection(input *Input) {
+	if input.Escape {
+		app.Mode = Mode_Normal
+		app.Breadcrumbs.ShowAvailableDrives(false)
+		return
+	}
+
 	if input.TypedCharacter == 0 {
 		return
 	}
@@ -151,6 +159,7 @@ func (app *App) handleInputDriveSelection(input *Input) {
 
 	app.GoToDrive(input.TypedCharacter)
 	app.Mode = Mode_Normal
+	app.Breadcrumbs.ShowAvailableDrives(false)
 }
 
 func (app *App) GoToDrive(drive byte) {
@@ -216,6 +225,11 @@ func (app *App) Render(renderer *sdl.Renderer) {
 
 	app.Breadcrumbs.Render(renderer, &app.Font, app.Theme.BreadcrumbsTheme)
 	app.ItemView.Render(renderer, app)
+
+	if app.Mode == Mode_Drive_Selection {
+		rect := sdl.Rect{X: 0, Y: app.Breadcrumbs.Rect.H, W: app.WindowRect.W, H: app.ItemView.Rect.H}
+		DrawRectTransparent(renderer, &rect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
+	}
 
 	if app.Notification.IsOpen {
 		app.Notification.Render(renderer, app)

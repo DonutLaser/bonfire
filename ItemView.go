@@ -20,9 +20,9 @@ const (
 )
 
 type Clipboard struct {
-	FullPath string
-	Name     string
-	Type     ItemType
+	Directory string
+	Name      string
+	Type      ItemType
 }
 
 type Favorite struct {
@@ -88,6 +88,7 @@ func (iv *ItemView) SetActiveByName(name string) {
 	for index, item := range iv.Items {
 		if item.Name == name {
 			iv.ActiveItem = int32(index)
+			iv.ActiveColumn = int32(index) / iv.MaxItemsPerColumn
 			break
 		}
 	}
@@ -109,7 +110,10 @@ func (iv *ItemView) SetFavorites(favorites []string) {
 }
 
 func (iv *ItemView) ShowFolder(fullPath string) bool {
-	items := ReadDirectory(fullPath)
+	items, success := ReadDirectory(fullPath)
+	if !success {
+		return false
+	}
 
 	var files []Item
 	var folders []Item
@@ -378,11 +382,11 @@ func (iv *ItemView) DeleteSelected() {
 
 func (iv *ItemView) CopyActive(showNotification bool) {
 	iv.Clipboard.Name = iv.Items[iv.ActiveItem].Name
-	iv.Clipboard.FullPath = path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
+	iv.Clipboard.Directory = iv.CurrentPath
 	iv.Clipboard.Type = iv.Items[iv.ActiveItem].Type
 
 	if showNotification {
-		NotifyInfo("Copied " + iv.Clipboard.FullPath)
+		NotifyInfo("Copied " + path.Join(iv.Clipboard.Directory, iv.Clipboard.Name))
 	}
 }
 
@@ -390,7 +394,7 @@ func (iv *ItemView) Paste() {
 	if iv.Clipboard.Type == ItemTypeFolder {
 		// @TODO (!important) implement pasting a folder
 	} else if iv.Clipboard.Type == ItemTypeFile {
-		success, name := DuplicateFile(iv.Clipboard.FullPath, iv.Clipboard.Name)
+		success, name := DuplicateFile(iv.Clipboard.Directory, iv.Clipboard.Name)
 		if !success {
 			return
 		}
@@ -583,7 +587,7 @@ func (iv *ItemView) CreateNewFile() {
 	// // @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
 	iv.SetActiveByName(name)
-	// // @TODO maybe automatically initiate rename of the new item
+	iv.RenameActive()
 }
 
 func (iv *ItemView) CreateNewFolder(updateView bool) string {
@@ -598,7 +602,7 @@ func (iv *ItemView) CreateNewFolder(updateView bool) string {
 	}
 
 	iv.SetActiveByName(name)
-	// @TODO maybe automatically initiate rename of the new item
+	iv.RenameActive()
 
 	return name
 }
@@ -677,7 +681,6 @@ func (iv *ItemView) Tick(input *Input) {
 			iv.GroupSelectedFiles()
 		} else {
 			iv.Mode = Mode_Goto
-			// @TODO (!important) show somehow that we are in the middle of changing drives
 		}
 	case '*':
 		iv.MarkActiveAsFavorite()

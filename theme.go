@@ -9,7 +9,6 @@ import (
 )
 
 // @TODO (!important) support custom icons
-// @TODO (!important) support active exe and image colors
 
 type Subtheme map[string]interface{}
 
@@ -24,7 +23,10 @@ type Theme struct {
 }
 
 func GetAvailableThemes() (result []string) {
-	files := ReadDirectory("./assets/themes")
+	files, success := ReadDirectory("./assets/themes")
+	if !success {
+		return
+	}
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".bft") {

@@ -6,8 +6,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) this should be controlled like vim
-
 type InlineInputField struct {
 	Value strings.Builder
 

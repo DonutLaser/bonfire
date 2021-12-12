@@ -7,15 +7,18 @@ import (
 )
 
 type Breadcrumbs struct {
-	Path []string
+	Path            []string
+	AvailableDrives []string
 
-	Rect sdl.Rect
+	Rect       sdl.Rect
+	ShowDrives bool
 }
 
-func NewBreadcrumbs(rect sdl.Rect) *Breadcrumbs {
+func NewBreadcrumbs(rect sdl.Rect, availableDrives []string) *Breadcrumbs {
 	return &Breadcrumbs{
-		Path: []string{},
-		Rect: rect,
+		Path:            []string{},
+		AvailableDrives: availableDrives,
+		Rect:            rect,
 	}
 }
 
@@ -41,6 +44,10 @@ func (b *Breadcrumbs) Set(fullPath string) {
 	b.Path = strings.Split(fullPath, "/")
 }
 
+func (b *Breadcrumbs) ShowAvailableDrives(show bool) {
+	b.ShowDrives = show
+}
+
 func (b *Breadcrumbs) Resize(rect sdl.Rect) {
 	b.Rect = rect
 }
@@ -48,7 +55,29 @@ func (b *Breadcrumbs) Resize(rect sdl.Rect) {
 func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font, theme Subtheme) {
 	DrawRect3D(renderer, &b.Rect, GetColor(theme, "background_color"))
 
-	if len(b.Path) > 0 {
+	if b.ShowDrives {
+		staticText := "Available drives: "
+		drives := strings.Join(b.AvailableDrives, ", ")
+
+		staticTextWidth := font.GetStringWidth(staticText)
+		drivesWidth := font.GetStringWidth(drives)
+
+		staticRect := sdl.Rect{
+			X: b.Rect.X + (b.Rect.W-staticTextWidth-drivesWidth)/2,
+			Y: b.Rect.Y + (b.Rect.H-font.Size)/2,
+			W: staticTextWidth,
+			H: font.Size,
+		}
+		drivesRect := sdl.Rect{
+			X: staticRect.X + staticRect.W,
+			Y: b.Rect.Y + (b.Rect.H-font.Size)/2,
+			W: drivesWidth,
+			H: font.Size,
+		}
+
+		DrawText(renderer, font, staticText, &staticRect, GetColor(theme, "separator_color"))
+		DrawText(renderer, font, drives, &drivesRect, GetColor(theme, "path_color"))
+	} else if len(b.Path) > 0 {
 		symbol := GetString(theme, "separator_symbol")
 
 		fullPath := strings.Join(b.Path, symbol)
