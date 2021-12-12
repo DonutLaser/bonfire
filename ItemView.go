@@ -100,7 +100,7 @@ func (iv *ItemView) SetFavorites(favorites []string) {
 	for _, favorite := range favorites {
 		iv.Favorites = append(iv.Favorites, Favorite{
 			FullPath: favorite,
-			Type:     GetFileType(favorite),
+			Type:     GetItemType(favorite),
 		})
 	}
 
@@ -128,7 +128,7 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 			files = append(files, Item{
 				Type:     ItemTypeFile,
 				Name:     file.Name(),
-				FileType: FileType(iv.getFileType(file.Name())),
+				FileType: FileType(GetFileType(file.Name())),
 			})
 		}
 	}
@@ -502,21 +502,6 @@ func (iv *ItemView) favoritesToPaths() []string {
 	return result
 }
 
-func (iv *ItemView) getFileType(filename string) int32 {
-	if strings.HasSuffix(filename, ".exe") {
-		return FileType_Exe
-	}
-
-	imageExtensions := []string{".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico"}
-	for _, ext := range imageExtensions {
-		if strings.HasSuffix(filename, ext) {
-			return FileType_Image
-		}
-	}
-
-	return FileType_Default
-}
-
 // func (iv *ItemView) getSelectedItems() (result []string) {
 // 	result = make([]string, iv.getSelectedItemsCount())
 // 	index := 0
@@ -640,6 +625,8 @@ func (iv *ItemView) Resize(rect sdl.Rect) {
 }
 
 func (iv *ItemView) Tick(input *Input) {
+	// @TODO (!important) Enter to open the file/folder
+
 	if iv.Input.IsOpen {
 		iv.Input.Tick(input)
 		return
@@ -741,6 +728,9 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 	case 'h':
 		iv.App.ShowFileInfo(iv.GetActiveFileInfo())
 		iv.Mode = Mode_Normal
+	case 'y':
+		iv.App.ShowPreview(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
+		iv.Mode = Mode_Normal
 	default:
 		iv.Mode = Mode_Normal
 	}
@@ -793,9 +783,9 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 				color := GetColor(ivTheme, "file_color")
 				if item.Type == ItemTypeFolder {
 					color = GetColor(ivTheme, "folder_color")
-				} else if item.FileType == FileType_Exe {
+				} else if item.FileType == FileTypeExe {
 					color = GetColor(ivTheme, "exe_color")
-				} else if item.FileType == FileType_Image {
+				} else if item.FileType == FileTypeImage {
 					color = GetColor(ivTheme, "image_color")
 				}
 

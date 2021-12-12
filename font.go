@@ -51,6 +51,15 @@ func (font *Font) ClipString(text string, width int32) string {
 	return sb.String()
 }
 
+func (font *Font) ClipStringNoEllipsis(text string, width int32) string {
+	if font.GetStringWidth(text) <= width {
+		return text
+	}
+
+	maxChars := int(width / int32(font.CharacterWidth))
+	return text[:maxChars]
+}
+
 func (font *Font) WrapString(text string, maxWidth int32) (result []string) {
 	if font.GetStringWidth(text) <= maxWidth {
 		result = []string{text}

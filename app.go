@@ -1,6 +1,7 @@
 package main
 
 import (
+	"path"
 	"strings"
 	"unicode"
 
@@ -35,10 +36,12 @@ type App struct {
 	QuickOpen
 	Notification
 	InfoView
+	Preview
 
 	Mode      Mode
 	LastError NotificationEvent
 	Settings
+	Renderer *sdl.Renderer
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
@@ -57,10 +60,12 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
 	result.InfoView = *NewInfoView()
+	result.Preview = *NewPreview()
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
 	result.Settings = NewSettings()
+	result.Renderer = renderer
 
 	result.Theme = *LoadTheme(result.Settings.ThemeName)
 
@@ -97,6 +102,10 @@ func (app *App) Tick(input *Input) {
 
 	if app.InfoView.IsOpen {
 		app.InfoView.Tick(input)
+	}
+
+	if app.Preview.IsOpen {
+		app.Preview.Tick(input)
 	}
 
 	if app.QuickOpen.IsOpen {
@@ -214,35 +223,54 @@ func (app *App) ShowFileInfo(info Info) {
 	app.InfoView.Show(info)
 }
 
+func (app *App) ShowPreview(directory string, name string) {
+	fileType := GetFileType(name)
+
+	switch fileType {
+	case FileTypeImage:
+		image := LoadImage(path.Join(directory, name), app.Renderer)
+		app.Preview.ShowImage(name, &image)
+	case FileTypeText:
+		text := ReadFile(path.Join(directory, name))
+		app.Preview.ShowText(name, text)
+	default:
+		app.Preview.ShowPreviewUnsupported(name)
+	}
+}
+
 // Used when the size is calculated in another thread
 func (app *App) SetFileInfoSize(size string) {
 	app.InfoView.Info.Size = size
 }
 
-func (app *App) Render(renderer *sdl.Renderer) {
-	renderer.SetDrawColor(0, 0, 0, 255)
-	renderer.Clear()
+func (app *App) Render() {
+	app.Renderer.SetDrawColor(0, 0, 0, 255)
+	app.Renderer.Clear()
 
-	app.Breadcrumbs.Render(renderer, &app.Font, app.Theme.BreadcrumbsTheme)
-	app.ItemView.Render(renderer, app)
+	app.Breadcrumbs.Render(app.Renderer, &app.Font, app.Theme.BreadcrumbsTheme)
+	app.ItemView.Render(app.Renderer, app)
 
 	if app.Mode == Mode_Drive_Selection {
 		rect := sdl.Rect{X: 0, Y: app.Breadcrumbs.Rect.H, W: app.WindowRect.W, H: app.ItemView.Rect.H}
-		DrawRectTransparent(renderer, &rect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
+		DrawRectTransparent(app.Renderer, &rect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
 	}
 
 	if app.Notification.IsOpen {
-		app.Notification.Render(renderer, app)
+		app.Notification.Render(app.Renderer, app)
 	}
 
 	if app.InfoView.IsOpen {
-		app.InfoView.Render(renderer, app)
+		app.InfoView.Render(app.Renderer, app)
+	}
+
+	if app.Preview.IsOpen {
+		app.Preview.Render(app.Renderer, app)
 	}
 
 	if app.QuickOpen.IsOpen {
-		DrawRectTransparent(renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
-		app.QuickOpen.Render(renderer, &app.ItemView.Rect, &app.Font, app.Theme.QuickOpenTheme, app.Theme.InputFieldTheme)
+		DrawRectTransparent(app.Renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
+		app.QuickOpen.Render(app.Renderer, &app.ItemView.Rect, &app.Font, app.Theme.QuickOpenTheme, app.Theme.InputFieldTheme)
 	}
 
-	renderer.Present()
+	app.Renderer.Present()
 }

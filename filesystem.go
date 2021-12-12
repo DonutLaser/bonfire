@@ -11,9 +11,10 @@ import (
 type FileType int32
 
 const (
-	FileType_Default = iota
-	FileType_Exe     = iota
-	FileType_Image   = iota
+	FileTypeDefault = iota
+	FileTypeExe     = iota
+	FileTypeImage   = iota
+	FileTypeText    = iota
 )
 
 func ReadFile(fullPath string) string {
@@ -143,7 +144,7 @@ func DoesFileExist(fullPath string) bool {
 	return err == nil
 }
 
-func GetFileType(fullPath string) ItemType {
+func GetItemType(fullPath string) ItemType {
 	stat, err := os.Stat(fullPath)
 	if err != nil {
 		NotifyError(err.Error())
@@ -155,6 +156,28 @@ func GetFileType(fullPath string) ItemType {
 	}
 
 	return ItemTypeFile
+}
+
+func GetFileType(filename string) FileType {
+	if strings.HasSuffix(filename, ".exe") {
+		return FileTypeExe
+	}
+
+	imageExtensions := []string{".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico"}
+	for _, ext := range imageExtensions {
+		if strings.HasSuffix(filename, ext) {
+			return FileTypeImage
+		}
+	}
+
+	txtExtensions := []string{".txt", ".md"}
+	for _, ext := range txtExtensions {
+		if strings.HasSuffix(filename, ext) {
+			return FileTypeText
+		}
+	}
+
+	return FileTypeDefault
 }
 
 func GetAvailableDrives() (result []string) {

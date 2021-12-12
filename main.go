@@ -195,7 +195,7 @@ func main() {
 		}
 
 		app.Tick(&input)
-		app.Render(renderer)
+		app.Render()
 	}
 
 	icon.Free()
