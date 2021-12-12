@@ -6,8 +6,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) this shouldn't open anything, just go to the directory/file
-
 type QuickOpen struct {
 	IsOpen            bool
 	MaxItems          int32

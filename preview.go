@@ -116,6 +116,20 @@ func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
 			W: newWidth,
 			H: newHeight,
 		}
+
+		if p.Image.Height > p.Image.Width {
+			ratio = float32(p.Image.Width) / float32(p.Image.Height)
+			newHeight = insetRect.H - p.Padding*2
+			newWidth = int32(float32(newHeight) * ratio)
+
+			imageRect = sdl.Rect{
+				X: insetRect.X + (insetRect.W-newWidth)/2,
+				Y: insetRect.Y + p.Padding,
+				W: newWidth,
+				H: newHeight,
+			}
+		}
+
 		DrawImage(renderer, p.Image.Data, imageRect, sdl.Color{R: 255, G: 255, B: 255, A: 255})
 	} else if p.PreviewMode == PreviewModeText {
 		lines := strings.Split(p.Text, "\n")
