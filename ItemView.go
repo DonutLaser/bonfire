@@ -188,7 +188,7 @@ func (iv *ItemView) GetActiveFileInfo() (result Info) {
 	return
 }
 
-func (iv *ItemView) OpenPath(fullPath string) {
+func (iv *ItemView) OpenFavorite(fullPath string) {
 	index := iv.favoriteIndex(fullPath)
 	if index < 0 {
 		return
@@ -211,7 +211,6 @@ func (iv *ItemView) OpenPath(fullPath string) {
 		base := path.Base(fullPath)
 
 		iv.SetActiveByName(base)
-		iv.OpenFile(base)
 	}
 }
 
@@ -625,8 +624,6 @@ func (iv *ItemView) Resize(rect sdl.Rect) {
 }
 
 func (iv *ItemView) Tick(input *Input) {
-	// @TODO (!important) Enter to open the file/folder
-
 	if iv.Input.IsOpen {
 		iv.Input.Tick(input)
 		return

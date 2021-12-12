@@ -193,7 +193,7 @@ func (app *App) GoToDrive(drive byte) {
 
 func (app *App) SelectFavorite(favorites []string) {
 	app.QuickOpen.Open(favorites, func(favorite string) {
-		app.ItemView.OpenPath(favorite)
+		app.ItemView.OpenFavorite(favorite)
 	})
 }
 
