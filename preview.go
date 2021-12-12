@@ -69,7 +69,7 @@ func (p *Preview) Tick(input *Input) {
 }
 
 func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
-	theme := app.Theme.InfoViewTheme
+	theme := app.Theme.PreviewTheme
 
 	headerRect := sdl.Rect{
 		X: app.WindowRect.X + app.WindowRect.W/2,
@@ -140,7 +140,7 @@ func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
 				continue
 			}
 
-			DrawText(renderer, &app.Font, l, &lineRect, GetColor(theme, "info_color"))
+			DrawText(renderer, &app.Font, l, &lineRect, GetColor(theme, "text_color"))
 		}
 	} else if p.PreviewMode == PreviewModeUnsupported {
 		textWidth := app.Font.GetStringWidth("Preview unsupported")
@@ -150,6 +150,6 @@ func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
 			W: textWidth,
 			H: app.Font.Size,
 		}
-		DrawText(renderer, &app.Font, "Preview unsupported", &textRect, GetColor(theme, "info_color"))
+		DrawText(renderer, &app.Font, "Preview unsupported", &textRect, GetColor(theme, "text_color"))
 	}
 }

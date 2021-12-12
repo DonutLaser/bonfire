@@ -40,3 +40,9 @@ background_color = 27 33 43
 inset_color = 15 20 30 
 header_color = 252 200 50
 info_color = 216 216 216
+
+@Preview
+background_color = 27 33 43
+inset_color = 15 20 30
+header_color = 252 200 50
+text_color = 216 216 216

@@ -41,3 +41,9 @@ background_color = 49 32 24
 inset_color = 21 21 21 
 header_color = 229 126 52 
 info_color = 232 193 37
+
+@Preview
+background_color = 49 32 24 
+inset_color = 21 21 21 
+header_color = 229 126 52 
+text_color = 232 193 37
