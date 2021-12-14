@@ -9,8 +9,6 @@ import (
 )
 
 // @TODO (!important) copy files and folders
-// @TODO (!important) show/hide hidden files
-// @TODO (!important) tag files
 // @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
 // @TODO (!important) make sure changes in the directory that are made outside the app are automatically reflected in the app
@@ -121,10 +119,8 @@ func (app *App) Tick(input *Input) {
 }
 
 func (app *App) handleInputNormal(input *Input) {
-	// @TODO (!important) R to advanded rename a group of selected items
 	// @TODO (!important) p to paste a folder
 	// @TODO (!important) P to paste an item contents (files if copying folder), shouldn't do anything for copied files
-	// @TODO (!important) ctrl + h to toggle visibility of hidden items
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
 
