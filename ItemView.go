@@ -34,6 +34,7 @@ type Item struct {
 	Type     ItemType
 	FileType FileType
 	Name     string
+	IsHidden bool
 
 	IsSelected       bool
 	IsFavorite       bool
@@ -55,8 +56,9 @@ type ItemView struct {
 	MaxItemsPerColumn int32
 	Columns           int32
 
-	App  *App
-	Mode Mode
+	App        *App
+	Mode       Mode
+	ShowHidden bool
 
 	FavoriteIcon   *Image
 	Input          *InlineInputField
@@ -119,16 +121,24 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	var folders []Item
 
 	for _, file := range items {
+		hidden := IsFileHidden(path.Join(fullPath, file.Name()))
+
+		if !iv.ShowHidden && hidden {
+			continue
+		}
+
 		if file.IsDir() {
 			folders = append(folders, Item{
-				Type: ItemTypeFolder,
-				Name: file.Name(),
+				Type:     ItemTypeFolder,
+				Name:     file.Name(),
+				IsHidden: hidden,
 			})
 		} else {
 			files = append(files, Item{
 				Type:     ItemTypeFile,
 				Name:     file.Name(),
 				FileType: FileType(GetFileType(file.Name())),
+				IsHidden: hidden,
 			})
 		}
 	}
@@ -702,6 +712,9 @@ func (iv *ItemView) Tick(input *Input) {
 		iv.App.SelectFavorite(iv.favoritesToPaths())
 	case '/':
 		iv.App.FindInCurrentFolder(iv.itemsToNames())
+	case 'H':
+		iv.ShowHidden = !iv.ShowHidden
+		iv.ShowFolder(iv.CurrentPath)
 	}
 }
 
@@ -778,12 +791,16 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 				}
 
 				color := GetColor(ivTheme, "file_color")
-				if item.Type == ItemTypeFolder {
-					color = GetColor(ivTheme, "folder_color")
-				} else if item.FileType == FileTypeExe {
-					color = GetColor(ivTheme, "exe_color")
-				} else if item.FileType == FileTypeImage {
-					color = GetColor(ivTheme, "image_color")
+				if item.IsHidden {
+					color = GetColor(ivTheme, "hidden_color")
+				} else {
+					if item.Type == ItemTypeFolder {
+						color = GetColor(ivTheme, "folder_color")
+					} else if item.FileType == FileTypeExe {
+						color = GetColor(ivTheme, "exe_color")
+					} else if item.FileType == FileTypeImage {
+						color = GetColor(ivTheme, "image_color")
+					}
 				}
 
 				if item.IsSelected {

@@ -9,7 +9,6 @@ import (
 )
 
 // @TODO (!important) copy files and folders
-// @TODO (!important) advanced rename files and folders
 // @TODO (!important) show/hide hidden files
 // @TODO (!important) tag files
 // @TODO have icons next to files/folders

@@ -8,6 +8,7 @@ separator_symbol = " / "
 background_color = 29 29 29
 folder_color = 198 198 198
 file_color = 142 142 142
+hidden_color = 57 61 55
 exe_color = 142 142 142
 image_color = 142 142 142
 active_folder_color = 98 219 51

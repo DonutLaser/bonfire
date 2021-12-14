@@ -7,6 +7,7 @@ separator_color = 140 140 140
 background_color = 37 37 37
 folder_color = 198 198 198
 file_color = 142 142 142
+hidden_color = 10 10 10
 exe_color = 142 142 142
 image_color = 142 142 142
 active_folder_color = 255 255 255

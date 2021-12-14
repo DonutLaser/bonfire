@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"syscall"
 )
 
 type FileType int32
@@ -190,4 +191,20 @@ func GetAvailableDrives() (result []string) {
 	}
 
 	return
+}
+
+func IsFileHidden(fullPath string) bool {
+	pointer, err := syscall.UTF16PtrFromString(fullPath)
+	if err != nil {
+		NotifyError(err.Error())
+		return false
+	}
+
+	attr, err := syscall.GetFileAttributes(pointer)
+	if err != nil {
+		NotifyError(err.Error())
+		return false
+	}
+
+	return attr&syscall.FILE_ATTRIBUTE_HIDDEN != 0
 }
