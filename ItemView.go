@@ -786,6 +786,15 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 					color = GetColor(ivTheme, "image_color")
 				}
 
+				if item.IsSelected {
+					DrawRect(renderer, &rect, GetColor(ivTheme, "selected_background_color"))
+
+					color = GetColor(ivTheme, "selected_file_color")
+					if item.Type == ItemTypeFolder {
+						color = GetColor(ivTheme, "selected_folder_color")
+					}
+				}
+
 				if itemIndex == int(iv.ActiveItem) {
 					if HasColor(ivTheme, "active_background_color") {
 						DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
@@ -798,13 +807,6 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 					color = GetColor(ivTheme, "active_file_color")
 					if item.Type == ItemTypeFolder {
 						color = GetColor(ivTheme, "active_folder_color")
-					}
-				} else if item.IsSelected {
-					DrawRect(renderer, &rect, GetColor(ivTheme, "selected_background_color"))
-
-					color = GetColor(ivTheme, "selected_file_color")
-					if item.Type == ItemTypeFolder {
-						color = GetColor(ivTheme, "selected_folder_color")
 					}
 				}
 
