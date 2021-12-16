@@ -26,14 +26,17 @@ type App struct {
 	Theme
 	AvailableThemes []string
 	AvailabelDrives []string
-	WindowRect      sdl.Rect
 
-	Breadcrumbs
-	ItemView
-	QuickOpen
-	Notification
-	InfoView
-	Preview
+	ActiveView  int32
+	ViewCount   int32
+	WindowRects []sdl.Rect
+
+	Breadcrumbs  []Breadcrumbs
+	ItemViews    []ItemView
+	QuickOpen    QuickOpen
+	Notification Notification
+	InfoViews    []InfoView
+	Previews     []Preview
 
 	Mode      Mode
 	LastError NotificationEvent
@@ -47,17 +50,20 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
 	result.AvailableThemes = GetAvailableThemes()
 	result.AvailabelDrives = GetAvailableDrives()
-	result.WindowRect = sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}
+
+	result.ActiveView = 0
+	result.ViewCount = 1
+	result.WindowRects = []sdl.Rect{sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}}
 
 	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
 
-	result.Breadcrumbs = *NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28}, result.AvailabelDrives)
-	result.ItemView = *NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon, result)
+	result.Breadcrumbs = []Breadcrumbs{*NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28}, result.AvailabelDrives)}
+	result.ItemViews = []ItemView{*NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon, result)}
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
-	result.InfoView = *NewInfoView()
-	result.Preview = *NewPreview()
+	result.InfoViews = []InfoView{*NewInfoView()}
+	result.Previews = []Preview{*NewPreview()}
 
 	result.GoToDrive('D')
 	result.Mode = Mode_Normal
@@ -66,7 +72,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 
 	result.Theme = *LoadTheme(result.Settings.ThemeName)
 
-	result.ItemView.SetFavorites(result.Settings.Favorites)
+	result.ItemViews[result.ActiveView].SetFavorites(result.Settings.Favorites)
 
 	globalNotificationHandler = func(e NotificationEvent) {
 		result.ShowNotification(e)
@@ -86,10 +92,19 @@ func (app *App) GetIcon() *sdl.Surface {
 }
 
 func (app *App) Resize(windowWidth int32, windowHeight int32) {
-	app.WindowRect.W = windowWidth
-	app.WindowRect.H = windowHeight
-	app.Breadcrumbs.Resize(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28})
-	app.ItemView.Resize(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28})
+	singleWidth := windowWidth / app.ViewCount
+
+	for i := int32(0); i < app.ViewCount; i++ {
+		app.WindowRects[i].W = singleWidth
+		app.WindowRects[i].H = windowHeight
+
+		app.Breadcrumbs[i].Resize(sdl.Rect{X: singleWidth * i, Y: 0, W: singleWidth, H: 28})
+		app.ItemViews[i].Resize(sdl.Rect{X: singleWidth * i, Y: 28, W: singleWidth, H: windowHeight - 28})
+	}
+
+	for index, bc := range app.Breadcrumbs {
+		bc.Resize(sdl.Rect{X: singleWidth * int32(index), Y: 0, W: singleWidth, H: 28})
+	}
 }
 
 func (app *App) Tick(input *Input) {
@@ -97,12 +112,14 @@ func (app *App) Tick(input *Input) {
 		app.Notification.Tick()
 	}
 
-	if app.InfoView.IsOpen {
-		app.InfoView.Tick(input)
-	}
+	for i := int32(0); i < app.ViewCount; i++ {
+		if app.InfoViews[i].IsOpen {
+			app.InfoViews[i].Tick(input)
+		}
 
-	if app.Preview.IsOpen {
-		app.Preview.Tick(input)
+		if app.Previews[i].IsOpen {
+			app.Previews[i].Tick(input)
+		}
 	}
 
 	if app.QuickOpen.IsOpen {
@@ -124,16 +141,16 @@ func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) X on a folder to take files out of the folder and remove only the folder and leave the files intact
 	// @TODO (!important) ctrl + x on a folder to force remove it and all its contents
 
-	app.ItemView.Tick(input)
+	app.ItemViews[app.ActiveView].Tick(input)
 
-	if app.ItemView.ConsumingInput {
+	if app.ItemViews[app.ActiveView].ConsumingInput {
 		return
 	}
 
 	switch input.TypedCharacter {
 	case ':':
 		app.Mode = Mode_Drive_Selection
-		app.Breadcrumbs.ShowAvailableDrives(true)
+		app.Breadcrumbs[app.ActiveView].ShowAvailableDrives(true)
 	case 'e':
 		if input.Alt {
 			app.ShowNotification(app.LastError)
@@ -148,7 +165,7 @@ func (app *App) handleInputNormal(input *Input) {
 func (app *App) handleInputDriveSelection(input *Input) {
 	if input.Escape {
 		app.Mode = Mode_Normal
-		app.Breadcrumbs.ShowAvailableDrives(false)
+		app.Breadcrumbs[app.ActiveView].ShowAvailableDrives(false)
 		return
 	}
 
@@ -163,7 +180,7 @@ func (app *App) handleInputDriveSelection(input *Input) {
 
 	app.GoToDrive(input.TypedCharacter)
 	app.Mode = Mode_Normal
-	app.Breadcrumbs.ShowAvailableDrives(false)
+	app.Breadcrumbs[app.ActiveView].ShowAvailableDrives(false)
 }
 
 func (app *App) GoToDrive(drive byte) {
@@ -178,17 +195,17 @@ func (app *App) GoToDrive(drive byte) {
 
 	// When we are opening the drive where the cwd is, go for some reason reads the cwd, not the drive.
 	// Adding a slash after the colon seems to fix this for whatever reason.
-	success := app.ItemView.ShowFolder(withSlash)
+	success := app.ItemViews[app.ActiveView].ShowFolder(withSlash)
 
 	if success {
-		app.Breadcrumbs.Clear()
-		app.Breadcrumbs.Push(withoutSlash)
+		app.Breadcrumbs[app.ActiveView].Clear()
+		app.Breadcrumbs[app.ActiveView].Push(withoutSlash)
 	}
 }
 
 func (app *App) SelectFavorite(favorites []string) {
 	app.QuickOpen.Open(favorites, func(favorite string) {
-		app.ItemView.OpenFavorite(favorite)
+		app.ItemViews[app.ActiveView].OpenFavorite(favorite)
 	})
 }
 
@@ -202,7 +219,7 @@ func (app *App) SelectTheme(themes []string) {
 
 func (app *App) FindInCurrentFolder(items []string) {
 	app.QuickOpen.Open(items, func(item string) {
-		app.ItemView.OpenItem(item)
+		app.ItemViews[app.ActiveView].OpenItem(item)
 	})
 }
 
@@ -215,7 +232,7 @@ func (app *App) ShowNotification(event NotificationEvent) {
 }
 
 func (app *App) ShowFileInfo(info Info) {
-	app.InfoView.Show(info)
+	app.InfoViews[app.ActiveView].Show(info)
 }
 
 func (app *App) ShowPreview(directory string, name string) {
@@ -224,29 +241,31 @@ func (app *App) ShowPreview(directory string, name string) {
 	switch fileType {
 	case FileTypeImage:
 		image := LoadImage(path.Join(directory, name), app.Renderer)
-		app.Preview.ShowImage(name, &image)
+		app.Previews[app.ActiveView].ShowImage(name, &image)
 	case FileTypeText:
 		text := ReadFile(path.Join(directory, name))
-		app.Preview.ShowText(name, text)
+		app.Previews[app.ActiveView].ShowText(name, text)
 	default:
-		app.Preview.ShowPreviewUnsupported(name)
+		app.Previews[app.ActiveView].ShowPreviewUnsupported(name)
 	}
 }
 
 // Used when the size is calculated in another thread
 func (app *App) SetFileInfoSize(size string) {
-	app.InfoView.Info.Size = size
+	app.InfoViews[app.ActiveView].Info.Size = size
 }
 
 func (app *App) Render() {
 	app.Renderer.SetDrawColor(0, 0, 0, 255)
 	app.Renderer.Clear()
 
-	app.Breadcrumbs.Render(app.Renderer, &app.Font, app.Theme.BreadcrumbsTheme)
-	app.ItemView.Render(app.Renderer, app)
+	for i := int32(0); i < app.ViewCount; i++ {
+		app.Breadcrumbs[i].Render(app.Renderer, &app.Font, app.Theme.BreadcrumbsTheme)
+		app.ItemViews[i].Render(app.Renderer, app)
+	}
 
 	if app.Mode == Mode_Drive_Selection {
-		rect := sdl.Rect{X: 0, Y: app.Breadcrumbs.Rect.H, W: app.WindowRect.W, H: app.ItemView.Rect.H}
+		rect := sdl.Rect{X: 0, Y: app.Breadcrumbs[app.ActiveView].Rect.H, W: app.WindowRects[app.ActiveView].W, H: app.ItemViews[app.ActiveView].Rect.H}
 		DrawRectTransparent(app.Renderer, &rect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
 	}
 
@@ -254,17 +273,19 @@ func (app *App) Render() {
 		app.Notification.Render(app.Renderer, app)
 	}
 
-	if app.InfoView.IsOpen {
-		app.InfoView.Render(app.Renderer, app)
-	}
+	for i := int32(0); i < app.ViewCount; i++ {
+		if app.InfoViews[i].IsOpen {
+			app.InfoViews[i].Render(app.Renderer, app)
+		}
 
-	if app.Preview.IsOpen {
-		app.Preview.Render(app.Renderer, app)
+		if app.Previews[i].IsOpen {
+			app.Previews[i].Render(app.Renderer, app)
+		}
 	}
 
 	if app.QuickOpen.IsOpen {
-		DrawRectTransparent(app.Renderer, &app.WindowRect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
-		app.QuickOpen.Render(app.Renderer, &app.ItemView.Rect, &app.Font, app.Theme.QuickOpenTheme, app.Theme.InputFieldTheme)
+		DrawRectTransparent(app.Renderer, &app.WindowRects[app.ActiveView], sdl.Color{R: 0, G: 0, B: 0, A: 150})
+		app.QuickOpen.Render(app.Renderer, &app.ItemViews[app.ActiveView].Rect, &app.Font, app.Theme.QuickOpenTheme, app.Theme.InputFieldTheme)
 	}
 
 	app.Renderer.Present()

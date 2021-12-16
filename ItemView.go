@@ -206,7 +206,7 @@ func (iv *ItemView) OpenFavorite(fullPath string) {
 
 	favorite := iv.Favorites[index]
 	if favorite.Type == ItemTypeFolder {
-		iv.App.Breadcrumbs.Set(fullPath)
+		iv.App.Breadcrumbs[iv.App.ActiveView].Set(fullPath)
 		iv.ShowFolder(fullPath)
 	} else if favorite.Type == ItemTypeFile {
 		p := path.Dir(fullPath)
@@ -215,7 +215,7 @@ func (iv *ItemView) OpenFavorite(fullPath string) {
 			p += "/"
 		}
 
-		iv.App.Breadcrumbs.Set(p)
+		iv.App.Breadcrumbs[iv.App.ActiveView].Set(p)
 		iv.ShowFolder(p)
 
 		base := path.Base(fullPath)
@@ -239,7 +239,7 @@ func (iv *ItemView) OpenFolder(name string) {
 
 	activeFolder := iv.GoInside()
 	if activeFolder != "" {
-		iv.App.Breadcrumbs.Push(activeFolder)
+		iv.App.Breadcrumbs[iv.App.ActiveView].Push(activeFolder)
 	}
 }
 
@@ -651,7 +651,7 @@ func (iv *ItemView) Tick(input *Input) {
 	}
 
 	if input.Backspace {
-		crumb := iv.App.Breadcrumbs.Pop()
+		crumb := iv.App.Breadcrumbs[iv.App.ActiveView].Pop()
 		if crumb != "" {
 			iv.GoOutside()
 		}
@@ -733,7 +733,7 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 		iv.OpenItem(iv.Items[iv.ActiveItem].Name)
 		iv.Mode = Mode_Normal
 	case 'g':
-		iv.App.ItemView.NavigateFirstInColumn()
+		iv.App.ItemViews[iv.App.ActiveView].NavigateFirstInColumn()
 		iv.Mode = Mode_Normal
 	case 'h':
 		iv.App.ShowFileInfo(iv.GetActiveFileInfo())

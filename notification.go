@@ -62,8 +62,8 @@ func (n *Notification) Render(renderer *sdl.Renderer, app *App) {
 	linesHeight := int32(len(lines))*app.Font.Size + n.Padding*2 + int32(len(lines)-1)*n.LineSpacing
 
 	rect := sdl.Rect{
-		X: app.WindowRect.X + (app.WindowRect.W-n.MaxWidth)/2,
-		Y: app.WindowRect.Y + app.WindowRect.H - linesHeight - 10,
+		X: app.WindowRects[app.ActiveView].X + (app.WindowRects[app.ActiveView].W-n.MaxWidth)/2,
+		Y: app.WindowRects[app.ActiveView].Y + app.WindowRects[app.ActiveView].H - linesHeight - 10,
 		W: n.MaxWidth,
 		H: linesHeight,
 	}

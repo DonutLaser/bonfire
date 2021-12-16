@@ -72,9 +72,9 @@ func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
 	theme := app.Theme.PreviewTheme
 
 	headerRect := sdl.Rect{
-		X: app.WindowRect.X + app.WindowRect.W/2,
-		Y: app.WindowRect.Y + app.Breadcrumbs.Rect.H + p.Padding,
-		W: app.WindowRect.W/2 - p.Padding,
+		X: app.WindowRects[app.ActiveView].X + app.WindowRects[app.ActiveView].W/2,
+		Y: app.WindowRects[app.ActiveView].Y + app.Breadcrumbs[app.ActiveView].Rect.H + p.Padding,
+		W: app.WindowRects[app.ActiveView].W/2 - p.Padding,
 		H: p.HeaderHeight,
 	}
 	DrawRect3D(renderer, &headerRect, GetColor(theme, "background_color"))
@@ -94,7 +94,7 @@ func (p *Preview) Render(renderer *sdl.Renderer, app *App) {
 		X: headerRect.X,
 		Y: headerRect.Y + p.HeaderHeight,
 		W: headerRect.W,
-		H: app.WindowRect.H - app.Breadcrumbs.Rect.H - p.HeaderHeight - p.Padding*2,
+		H: app.WindowRects[app.ActiveView].H - app.Breadcrumbs[app.ActiveView].Rect.H - p.HeaderHeight - p.Padding*2,
 	}
 	insetRect := sdl.Rect{
 		X: baseRect.X + p.Padding,
