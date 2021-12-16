@@ -22,7 +22,8 @@ const (
 )
 
 type App struct {
-	Font Font
+	Font         Font
+	FavoriteIcon Image
 	Theme
 	AvailableThemes []string
 	AvailabelDrives []string
@@ -48,17 +49,16 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
+	result.FavoriteIcon = LoadImage("assets/images/favorite.png", renderer)
 	result.AvailableThemes = GetAvailableThemes()
 	result.AvailabelDrives = GetAvailableDrives()
 
 	result.ActiveView = 0
 	result.ViewCount = 1
-	result.WindowRects = []sdl.Rect{sdl.Rect{X: 0, Y: 0, W: windowWidth, H: windowHeight}}
-
-	favoriteIcon := LoadImage("assets/images/favorite.png", renderer)
+	result.WindowRects = []sdl.Rect{{X: 0, Y: 0, W: windowWidth, H: windowHeight}}
 
 	result.Breadcrumbs = []Breadcrumbs{*NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28}, result.AvailabelDrives)}
-	result.ItemViews = []ItemView{*NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, &favoriteIcon, result)}
+	result.ItemViews = []ItemView{*NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, result)}
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
@@ -85,6 +85,7 @@ func (app *App) Close() {
 	// @TODO (!important) What if the program is closed in such a way that Save function is not called?
 	app.Settings.Save(false)
 	app.Font.Unload()
+	app.FavoriteIcon.Unload()
 }
 
 func (app *App) GetIcon() *sdl.Surface {
@@ -158,6 +159,22 @@ func (app *App) handleInputNormal(input *Input) {
 	case '.':
 		if input.Ctrl && input.Alt {
 			app.SelectTheme(app.AvailableThemes)
+		}
+	case '}':
+		if input.Ctrl && input.Shift {
+			app.AddView()
+		}
+	case '{':
+		if input.Ctrl && input.Shift {
+			app.RemoveView()
+		}
+	case ']':
+		if input.Ctrl {
+			app.GoToNextView()
+		}
+	case '[':
+		if input.Ctrl {
+			app.GoToPrevView()
 		}
 	}
 }
@@ -253,6 +270,77 @@ func (app *App) ShowPreview(directory string, name string) {
 // Used when the size is calculated in another thread
 func (app *App) SetFileInfoSize(size string) {
 	app.InfoViews[app.ActiveView].Info.Size = size
+}
+
+func (app *App) AddView() {
+	newCount := app.ViewCount + 1
+
+	fullRect := sdl.Rect{X: 0, Y: 0, W: 0, H: app.WindowRects[0].H}
+	for i := int32(0); i < app.ViewCount; i++ {
+		fullRect.W += app.WindowRects[i].W
+	}
+	singleWidth := fullRect.W / newCount
+
+	for i := int32(0); i < app.ViewCount; i++ {
+		app.WindowRects[i] = sdl.Rect{X: singleWidth * i, Y: 0, W: singleWidth, H: app.WindowRects[0].H}
+	}
+	app.WindowRects = append(app.WindowRects, sdl.Rect{X: singleWidth * app.ViewCount, Y: 0, W: singleWidth, H: app.WindowRects[0].H})
+
+	for i := int32(0); i < app.ViewCount; i++ {
+		app.Breadcrumbs[i].Resize(sdl.Rect{X: singleWidth * i, Y: 0, W: singleWidth, H: 28})
+		app.ItemViews[i].Resize(sdl.Rect{X: singleWidth * i, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28})
+	}
+	app.Breadcrumbs = append(app.Breadcrumbs, *NewBreadcrumbs(sdl.Rect{X: singleWidth * app.ViewCount, Y: 0, W: singleWidth, H: 28}, app.AvailabelDrives))
+	app.ItemViews = append(app.ItemViews, *NewItemView(sdl.Rect{X: singleWidth * app.ViewCount, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28}, app))
+	app.InfoViews = append(app.InfoViews, *NewInfoView())
+	app.Previews = append(app.Previews, *NewPreview())
+
+	app.ActiveView = newCount - 1
+	app.ViewCount = newCount
+
+	app.ItemViews[app.ActiveView].SetFavorites(app.Settings.Favorites)
+	app.GoToDrive('D')
+}
+
+func (app *App) RemoveView() {
+	newCount := app.ViewCount - 1
+
+	fullRect := sdl.Rect{X: 0, Y: 0, W: 0, H: app.WindowRects[0].H}
+	for i := int32(0); i < app.ViewCount; i++ {
+		fullRect.W += app.WindowRects[i].W
+	}
+	singleWidth := fullRect.W / newCount
+
+	for i := int32(0); i < newCount; i++ {
+		app.WindowRects[i] = sdl.Rect{X: singleWidth * i, Y: 0, W: singleWidth, H: app.WindowRects[0].H}
+	}
+	app.WindowRects = app.WindowRects[:newCount]
+
+	for i := int32(0); i < newCount; i++ {
+		app.Breadcrumbs[i].Resize(sdl.Rect{X: singleWidth * i, Y: 0, W: singleWidth, H: 28})
+		app.ItemViews[i].Resize(sdl.Rect{X: singleWidth * i, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28})
+	}
+	app.Breadcrumbs = app.Breadcrumbs[:newCount]
+	app.ItemViews = app.ItemViews[:newCount]
+	app.InfoViews = app.InfoViews[:newCount]
+	app.Previews = app.Previews[:newCount]
+
+	if app.ActiveView >= newCount {
+		app.ActiveView = newCount - 1
+	}
+	app.ViewCount = newCount
+}
+
+func (app *App) GoToNextView() {
+	if app.ActiveView < app.ViewCount-1 {
+		app.ActiveView++
+	}
+}
+
+func (app *App) GoToPrevView() {
+	if app.ActiveView > 0 {
+		app.ActiveView--
+	}
 }
 
 func (app *App) Render() {

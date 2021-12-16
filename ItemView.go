@@ -60,14 +60,13 @@ type ItemView struct {
 	Mode       Mode
 	ShowHidden bool
 
-	FavoriteIcon   *Image
 	Input          *InlineInputField
 	ConsumingInput bool
 	SelectionMode  bool
 	SelectionStart int32
 }
 
-func NewItemView(rect sdl.Rect, favoriteIcon *Image, app *App) *ItemView {
+func NewItemView(rect sdl.Rect, app *App) *ItemView {
 	return &ItemView{
 		ActiveItem:        -1,
 		ActiveColumn:      0,
@@ -77,13 +76,8 @@ func NewItemView(rect sdl.Rect, favoriteIcon *Image, app *App) *ItemView {
 		MaxItemsPerColumn: rect.H / 24,
 		App:               app,
 		Mode:              Mode_Normal,
-		FavoriteIcon:      favoriteIcon,
 		Input:             NewInlineInputField(),
 	}
-}
-
-func (iv *ItemView) Close() {
-	iv.FavoriteIcon.Unload()
 }
 
 func (iv *ItemView) SetActiveByName(name string) {
@@ -831,13 +825,13 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 
 				if item.IsFavorite {
 					iconRect := sdl.Rect{
-						X: rect.X + rect.W - (itemPadding + iv.FavoriteIcon.Width),
-						Y: rect.Y + (iv.ItemHeight-iv.FavoriteIcon.Height)/2,
-						W: iv.FavoriteIcon.Width,
-						H: iv.FavoriteIcon.Height,
+						X: rect.X + rect.W - (itemPadding + iv.App.FavoriteIcon.Width),
+						Y: rect.Y + (iv.ItemHeight-iv.App.FavoriteIcon.Height)/2,
+						W: iv.App.FavoriteIcon.Width,
+						H: iv.App.FavoriteIcon.Height,
 					}
 
-					DrawImage(renderer, iv.FavoriteIcon.Data, iconRect, GetColor(ivTheme, "favorite_icon_color"))
+					DrawImage(renderer, iv.App.FavoriteIcon.Data, iconRect, GetColor(ivTheme, "favorite_icon_color"))
 				}
 			}
 
