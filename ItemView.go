@@ -740,7 +740,7 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 	}
 }
 
-func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
+func (iv *ItemView) Render(renderer *sdl.Renderer, app *App, active bool) {
 	ivTheme := app.Theme.ItemViewTheme
 	ifTheme := app.Theme.InputFieldTheme
 
@@ -797,7 +797,7 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 					}
 				}
 
-				if item.IsSelected {
+				if item.IsSelected && active {
 					DrawRect(renderer, &rect, GetColor(ivTheme, "selected_background_color"))
 
 					color = GetColor(ivTheme, "selected_file_color")
@@ -806,7 +806,7 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App) {
 					}
 				}
 
-				if itemIndex == int(iv.ActiveItem) {
+				if itemIndex == int(iv.ActiveItem) && active {
 					if HasColor(ivTheme, "active_background_color") {
 						DrawRect(renderer, &rect, GetColor(ivTheme, "active_background_color"))
 					}

@@ -357,7 +357,7 @@ func (app *App) Render() {
 
 	for i := int32(0); i < app.ViewCount; i++ {
 		app.Breadcrumbs[i].Render(app.Renderer, &app.Font, app.Theme.BreadcrumbsTheme)
-		app.ItemViews[i].Render(app.Renderer, app)
+		app.ItemViews[i].Render(app.Renderer, app, app.ActiveView == i)
 	}
 
 	if app.Mode == Mode_Drive_Selection {
