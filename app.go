@@ -273,6 +273,10 @@ func (app *App) SetFileInfoSize(size string) {
 }
 
 func (app *App) AddView() {
+	if app.ViewCount == 3 {
+		return
+	}
+
 	newCount := app.ViewCount + 1
 
 	fullRect := sdl.Rect{X: 0, Y: 0, W: 0, H: app.WindowRects[0].H}
@@ -303,6 +307,10 @@ func (app *App) AddView() {
 }
 
 func (app *App) RemoveView() {
+	if app.ViewCount == 1 {
+		return
+	}
+
 	newCount := app.ViewCount - 1
 
 	fullRect := sdl.Rect{X: 0, Y: 0, W: 0, H: app.WindowRects[0].H}
