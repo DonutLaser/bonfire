@@ -361,7 +361,7 @@ func (app *App) Render() {
 	}
 
 	if app.Mode == Mode_Drive_Selection {
-		rect := sdl.Rect{X: 0, Y: app.Breadcrumbs[app.ActiveView].Rect.H, W: app.WindowRects[app.ActiveView].W, H: app.ItemViews[app.ActiveView].Rect.H}
+		rect := sdl.Rect{X: app.Breadcrumbs[app.ActiveView].Rect.X, Y: app.Breadcrumbs[app.ActiveView].Rect.H, W: app.WindowRects[app.ActiveView].W, H: app.ItemViews[app.ActiveView].Rect.H}
 		DrawRectTransparent(app.Renderer, &rect, sdl.Color{R: 0, G: 0, B: 0, A: 150})
 	}
 
