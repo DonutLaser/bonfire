@@ -14,6 +14,7 @@ image_color = 255 231 133
 active_folder_color = 229 126 52 
 active_file_color = 145 84 57
 active_background_color = 49 32 24
+inactive_background_border = 49 32 24
 selected_folder_color = 229 126 52 
 selected_file_color = 145 84 57 
 selected_background_color = 92 27 29

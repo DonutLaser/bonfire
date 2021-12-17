@@ -13,6 +13,7 @@ image_color = 142 142 142
 active_folder_color = 255 255 255
 active_file_color = 255 255 255
 active_background_border = 255 255 255
+inactive_background_border = 64 64 64
 selected_folder_color = 198 198 198
 selected_file_color = 142 142 142
 selected_background_color = 73 73 73
