@@ -113,14 +113,12 @@ func (app *App) Tick(input *Input) {
 		app.Notification.Tick()
 	}
 
-	for i := int32(0); i < app.ViewCount; i++ {
-		if app.InfoViews[i].IsOpen {
-			app.InfoViews[i].Tick(input)
-		}
+	if app.InfoViews[app.ActiveView].IsOpen {
+		app.InfoViews[app.ActiveView].Tick(input)
+	}
 
-		if app.Previews[i].IsOpen {
-			app.Previews[i].Tick(input)
-		}
+	if app.Previews[app.ActiveView].IsOpen {
+		app.Previews[app.ActiveView].Tick(input)
 	}
 
 	if app.QuickOpen.IsOpen {
@@ -371,11 +369,11 @@ func (app *App) Render() {
 
 	for i := int32(0); i < app.ViewCount; i++ {
 		if app.InfoViews[i].IsOpen {
-			app.InfoViews[i].Render(app.Renderer, app)
+			app.InfoViews[i].Render(app.Renderer, &app.WindowRects[i], app)
 		}
 
 		if app.Previews[i].IsOpen {
-			app.Previews[i].Render(app.Renderer, app)
+			app.Previews[i].Render(app.Renderer, &app.WindowRects[i], app)
 		}
 	}
 

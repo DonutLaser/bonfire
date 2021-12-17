@@ -48,12 +48,12 @@ func (i *InfoView) Tick(input *Input) {
 	}
 }
 
-func (i *InfoView) Render(renderer *sdl.Renderer, app *App) {
+func (i *InfoView) Render(renderer *sdl.Renderer, parentRect *sdl.Rect, app *App) {
 	theme := app.Theme.InfoViewTheme
 
 	headerRect := sdl.Rect{
-		X: app.WindowRects[app.ActiveView].X + app.WindowRects[app.ActiveView].W - 10 - i.MaxWidth,
-		Y: app.WindowRects[app.ActiveView].Y + app.WindowRects[app.ActiveView].H - 10 - i.HeaderHeight - i.ItemHeight*3 - i.Padding*2,
+		X: parentRect.X + parentRect.W - 10 - i.MaxWidth,
+		Y: parentRect.Y + parentRect.H - 10 - i.HeaderHeight - i.ItemHeight*3 - i.Padding*2,
 		W: i.MaxWidth,
 		H: i.HeaderHeight,
 	}
@@ -71,7 +71,7 @@ func (i *InfoView) Render(renderer *sdl.Renderer, app *App) {
 	DrawText(renderer, &app.Font, clippedName, &nameRect, GetColor(theme, "header_color"))
 
 	baseRect := sdl.Rect{
-		X: app.WindowRects[app.ActiveView].X + app.WindowRects[app.ActiveView].W - 10 - i.MaxWidth,
+		X: parentRect.X + parentRect.W - 10 - i.MaxWidth,
 		Y: headerRect.Y + headerRect.H,
 		W: i.MaxWidth,
 		H: i.ItemHeight*3 + i.Padding*2,
