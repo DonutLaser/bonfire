@@ -44,11 +44,14 @@ type ItemView struct {
 
 	Favorites []Favorite
 
-	Rect              sdl.Rect
-	ItemHeight        int32
-	ItemWidth         int32
-	MaxItemsPerColumn int32
-	Columns           int32
+	Rect                 sdl.Rect
+	ItemHeight           int32
+	ItemWidth            int32
+	ScrollOffset         int32
+	MaxItemsPerColumn    int32
+	MaxViewportColumns   int32
+	ActiveViewportColumn int32
+	Columns              int32
 
 	App        *App
 	Mode       Mode
@@ -65,15 +68,16 @@ type ItemView struct {
 
 func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
 	result = &ItemView{
-		ActiveItem:        -1,
-		ActiveColumn:      0,
-		Rect:              rect,
-		ItemHeight:        24,
-		ItemWidth:         394,
-		MaxItemsPerColumn: rect.H / 24,
-		App:               app,
-		Mode:              Mode_Normal,
-		Input:             NewInlineInputField(),
+		ActiveItem:         -1,
+		ActiveColumn:       0,
+		Rect:               rect,
+		ItemHeight:         24,
+		ItemWidth:          394,
+		MaxItemsPerColumn:  rect.H / 24,
+		MaxViewportColumns: rect.W / 394,
+		App:                app,
+		Mode:               Mode_Normal,
+		Input:              NewInlineInputField(),
 	}
 
 	result.NormalKeyMap = map[byte][]Shortcut{}
@@ -367,6 +371,12 @@ func (iv *ItemView) NavigateRight() {
 
 	iv.ActiveColumn++
 
+	iv.ActiveViewportColumn++
+	if iv.ActiveViewportColumn == iv.MaxViewportColumns {
+		iv.ActiveViewportColumn = iv.MaxViewportColumns - 1
+		iv.ScrollOffset -= iv.ItemWidth
+	}
+
 	if iv.ActiveItem+iv.MaxItemsPerColumn >= int32(len(iv.Items)) {
 		iv.ActiveItem = int32(len(iv.Items) - 1)
 	} else {
@@ -383,6 +393,13 @@ func (iv *ItemView) NavigateLeft() {
 
 	iv.ActiveColumn--
 	iv.ActiveItem -= iv.MaxItemsPerColumn
+
+	iv.ActiveViewportColumn--
+	if iv.ActiveViewportColumn < 0 {
+		iv.ActiveViewportColumn = 0
+		iv.ScrollOffset += iv.ItemWidth
+	}
+
 	iv.updateSelection()
 }
 
@@ -779,6 +796,7 @@ func (iv *ItemView) ExtractFilesFromFolder() {
 func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.Rect = rect
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
+	iv.MaxViewportColumns = rect.W / iv.ItemWidth
 }
 
 func (iv *ItemView) Tick(input *Input) {
@@ -857,7 +875,7 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App, active bool) {
 			item := iv.Items[itemIndex]
 
 			rect := sdl.Rect{
-				X: iv.Rect.X + padding + int32(i)*iv.ItemWidth,
+				X: iv.Rect.X + padding + iv.ScrollOffset + int32(i)*iv.ItemWidth,
 				Y: iv.Rect.Y + padding + iv.ItemHeight*int32(j),
 				W: iv.ItemWidth,
 				H: iv.ItemHeight,
