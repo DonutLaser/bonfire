@@ -48,3 +48,7 @@ background_color = 37 37 37
 inset_color = 28 28 28
 header_color = 210 210 209
 text_color = 140 140 140
+
+@Scrollbar
+handle_color = 37 37 37
+inset_color = 28 28 28

@@ -15,7 +15,7 @@ func (s *Scrollbar) Resize(rect sdl.Rect) {
 }
 
 func (s *Scrollbar) Render(renderer *sdl.Renderer, progress int32, max int32, app *App) {
-	theme := app.Theme.PreviewTheme
+	theme := app.Theme.ScrollbarTheme
 
 	DrawRect3DInset(renderer, &s.Rect, GetColor(theme, "inset_color"))
 
@@ -27,5 +27,5 @@ func (s *Scrollbar) Render(renderer *sdl.Renderer, progress int32, max int32, ap
 		H: s.Rect.H - 2,
 	}
 
-	DrawRect3D(renderer, &handleRect, GetColor(theme, "background_color"))
+	DrawRect3D(renderer, &handleRect, GetColor(theme, "handle_color"))
 }
