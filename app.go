@@ -363,6 +363,30 @@ func (app *App) Copy(name string, directory string, itemType ItemType) {
 	app.Type = itemType
 }
 
+func (app *App) MoveItemToNextView(name string, directory string, itemType ItemType) {
+	nextView := app.ActiveView + 1
+	if nextView >= app.ViewCount {
+		return
+	}
+
+	app.ActiveView = nextView
+
+	app.Copy(name, directory, itemType)
+	app.ItemViews[app.ActiveView].Paste()
+}
+
+func (app *App) MoveItemToPrevView(name string, directory string, itemType ItemType) {
+	prevView := app.ActiveView - 1
+	if prevView < 0 {
+		return
+	}
+
+	app.ActiveView = prevView
+
+	app.Copy(name, directory, itemType)
+	app.ItemViews[app.ActiveView].Paste()
+}
+
 func (app *App) GetClipboard() *Clipboard {
 	return &app.Clipboard
 }

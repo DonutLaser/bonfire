@@ -154,6 +154,18 @@ func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
 		result.ShowHidden = !result.ShowHidden
 		result.ShowFolder(result.CurrentPath)
 	}}}
+	result.NormalKeyMap['.'] = []Shortcut{{Ctrl: true, Alt: false, Callback: func() {
+		result.App.MoveItemToNextView(result.Items[result.ActiveItem].Name, result.CurrentPath, result.Items[result.ActiveItem].Type)
+		result.DeleteActive()
+
+		NotifyInfo("Moved " + path.Join(result.CurrentPath, result.Items[result.ActiveItem].Name))
+	}}}
+	result.NormalKeyMap[','] = []Shortcut{{Ctrl: true, Alt: false, Callback: func() {
+		result.App.MoveItemToPrevView(result.Items[result.ActiveItem].Name, result.CurrentPath, result.Items[result.ActiveItem].Type)
+		result.DeleteActive()
+
+		NotifyInfo("Moved " + path.Join(result.CurrentPath, result.Items[result.ActiveItem].Name))
+	}}}
 
 	result.GotoKeyMap = map[byte]Shortcut{}
 	result.GotoKeyMap['d'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
