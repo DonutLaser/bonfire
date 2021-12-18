@@ -114,6 +114,9 @@ func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
 			result.DeleteSelected()
 		}
 	}}}
+	result.NormalKeyMap['x'] = append(result.NormalKeyMap['x'], Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.ExtractFilesFromFolder()
+	}})
 	result.NormalKeyMap['y'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
 		if result.getSelectedItemsCount() == 0 {
 			result.CopyActive(true)
@@ -716,6 +719,29 @@ func (iv *ItemView) GroupSelectedFiles() {
 	iv.ShowFolder(iv.CurrentPath)
 	iv.SetActiveByName(newFolderName)
 	iv.RenameActive()
+}
+
+func (iv *ItemView) ExtractFilesFromFolder() {
+	active := iv.Items[iv.ActiveItem]
+	if active.Type != ItemTypeFolder {
+		return
+	}
+
+	items, success := ReadDirectory(path.Join(iv.CurrentPath, active.Name))
+	if !success {
+		return
+	}
+
+	for _, file := range items {
+		err := os.Rename(path.Join(iv.CurrentPath, active.Name, file.Name()), path.Join(iv.CurrentPath, file.Name()))
+		if err != nil {
+			NotifyError(err.Error())
+			return
+		}
+	}
+
+	iv.DeleteActive()
+	iv.ShowFolder(iv.CurrentPath)
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
