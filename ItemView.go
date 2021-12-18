@@ -19,12 +19,6 @@ const (
 	ItemTypeFolder
 )
 
-type Clipboard struct {
-	Directory string
-	Name      string
-	Type      ItemType
-}
-
 type Favorite struct {
 	FullPath string
 	Type     ItemType
@@ -48,7 +42,6 @@ type ItemView struct {
 	CurrentPath  string
 
 	Favorites []Favorite
-	Clipboard
 
 	Rect              sdl.Rect
 	ItemHeight        int32
@@ -506,20 +499,20 @@ func (iv *ItemView) DeleteSelected() {
 }
 
 func (iv *ItemView) CopyActive(showNotification bool) {
-	iv.Clipboard.Name = iv.Items[iv.ActiveItem].Name
-	iv.Clipboard.Directory = iv.CurrentPath
-	iv.Clipboard.Type = iv.Items[iv.ActiveItem].Type
+	iv.App.Copy(iv.Items[iv.ActiveItem].Name, iv.CurrentPath, iv.Items[iv.ActiveItem].Type)
 
 	if showNotification {
-		NotifyInfo("Copied " + path.Join(iv.Clipboard.Directory, iv.Clipboard.Name))
+		NotifyInfo("Copied " + path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
 	}
 }
 
 func (iv *ItemView) Paste() {
-	if iv.Clipboard.Type == ItemTypeFolder {
+	clipboard := iv.App.GetClipboard()
+
+	if clipboard.Type == ItemTypeFolder {
 		// @TODO (!important) implement pasting a folder
-	} else if iv.Clipboard.Type == ItemTypeFile {
-		success, name := DuplicateFile(iv.Clipboard.Directory, iv.Clipboard.Name)
+	} else if clipboard.Type == ItemTypeFile {
+		success, name := MakeFileCopy(clipboard.Directory, clipboard.Name, iv.CurrentPath)
 		if !success {
 			return
 		}

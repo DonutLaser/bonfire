@@ -89,6 +89,24 @@ func DuplicateFile(dirname string, filename string) (bool, string) {
 	return true, name
 }
 
+func MakeFileCopy(dirname string, filename string, destDirname string) (bool, string) {
+	name := GetAvailableFileName(destDirname, filename)
+
+	data, err := os.ReadFile(path.Join(dirname, filename))
+	if err != nil {
+		NotifyError(err.Error())
+		return false, ""
+	}
+
+	err = os.WriteFile(path.Join(destDirname, name), data, 0644)
+	if err != nil {
+		NotifyError(err.Error())
+		return false, ""
+	}
+
+	return true, name
+}
+
 func GetAvailableFileName(dirName string, filename string) (result string) {
 	fullPath := path.Join(dirName, filename)
 

@@ -21,6 +21,12 @@ const (
 	Mode_Goto
 )
 
+type Clipboard struct {
+	Directory string
+	Name      string
+	Type      ItemType
+}
+
 type App struct {
 	Font         Font
 	FavoriteIcon Image
@@ -45,6 +51,7 @@ type App struct {
 	Renderer *sdl.Renderer
 
 	NormalKeyMap map[byte]Shortcut
+	Clipboard
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
@@ -348,6 +355,16 @@ func (app *App) GoToPrevView() {
 	if app.ActiveView > 0 {
 		app.ActiveView--
 	}
+}
+
+func (app *App) Copy(name string, directory string, itemType ItemType) {
+	app.Clipboard.Name = name
+	app.Clipboard.Directory = directory
+	app.Type = itemType
+}
+
+func (app *App) GetClipboard() *Clipboard {
+	return &app.Clipboard
 }
 
 func (app *App) Render() {
