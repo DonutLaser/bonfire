@@ -5,6 +5,15 @@ import (
 	"github.com/veandco/go-sdl2/ttf"
 )
 
+func toggleMaximizeWindow(window *sdl.Window) {
+	flags := window.GetFlags()
+	if flags&sdl.WINDOW_MAXIMIZED != 0 {
+		window.Restore()
+	} else {
+		window.Maximize()
+	}
+}
+
 func getCharacter(shift bool, lowercase byte, uppercase byte) byte {
 	if shift {
 		return uppercase
@@ -143,7 +152,11 @@ func main() {
 
 	windowWidth, windowHeight := window.GetSize()
 
-	app := NewApp(renderer, windowWidth, windowHeight)
+	platformLayer := PlatformLayer{
+		ToggleMaximizeWindow: func() { toggleMaximizeWindow(window) },
+	}
+
+	app := NewApp(renderer, windowWidth, windowHeight, platformLayer)
 
 	icon := app.GetIcon()
 	input := Input{}
@@ -181,6 +194,10 @@ func main() {
 				case sdl.K_ESCAPE:
 					if t.State != sdl.RELEASED {
 						input.Escape = true
+					}
+				case sdl.K_F11:
+					if t.State != sdl.RELEASED {
+						input.F11 = true
 					}
 				default:
 					if t.State != sdl.RELEASED {

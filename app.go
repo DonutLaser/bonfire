@@ -27,6 +27,10 @@ type Clipboard struct {
 	Type      ItemType
 }
 
+type PlatformLayer struct {
+	ToggleMaximizeWindow func()
+}
+
 type App struct {
 	Font         Font
 	FavoriteIcon Image
@@ -49,12 +53,13 @@ type App struct {
 	LastError NotificationEvent
 	Settings
 	Renderer *sdl.Renderer
+	PlatformLayer
 
 	NormalKeyMap map[byte]Shortcut
 	Clipboard
 }
 
-func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
+func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32, platformLayer PlatformLayer) (result *App) {
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
@@ -86,6 +91,8 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	globalNotificationHandler = func(e NotificationEvent) {
 		result.ShowNotification(e)
 	}
+
+	result.PlatformLayer = platformLayer
 
 	result.NormalKeyMap = map[byte]Shortcut{}
 	result.NormalKeyMap[':'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
@@ -170,6 +177,11 @@ func (app *App) Tick(input *Input) {
 func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) p to paste a folder
 	// @TODO (!important) P to paste an item contents (files if copying folder), shouldn't do anything for copied files
+
+	if input.F11 {
+		app.PlatformLayer.ToggleMaximizeWindow()
+		return
+	}
 
 	app.ItemViews[app.ActiveView].Tick(input)
 
