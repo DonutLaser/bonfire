@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math"
 	"os"
 	"path"
 	"sort"
@@ -257,8 +258,8 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 		iv.Items[index].IsFavorite = iv.favoriteIndex(path.Join(fullPath, item.Name)) >= 0
 	}
 
-	iv.Columns = int32(len(iv.Items)) / iv.MaxItemsPerColumn
-	iv.Columns++ // Basically ceiling the number
+	cols := float64(len(iv.Items)) / float64(iv.MaxItemsPerColumn)
+	iv.Columns = int32(math.Ceil(cols))
 
 	iv.ActiveItem = 0
 	iv.CurrentPath = fullPath
