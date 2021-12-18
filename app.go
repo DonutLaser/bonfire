@@ -163,7 +163,6 @@ func (app *App) Tick(input *Input) {
 func (app *App) handleInputNormal(input *Input) {
 	// @TODO (!important) p to paste a folder
 	// @TODO (!important) P to paste an item contents (files if copying folder), shouldn't do anything for copied files
-	// @TODO (!important) X on a folder to force remove it and all its contents
 
 	app.ItemViews[app.ActiveView].Tick(input)
 
