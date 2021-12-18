@@ -801,6 +801,20 @@ func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
 	iv.MaxViewportColumns = rect.W / iv.ItemWidth
 
+	cols := float64(len(iv.Items)) / float64(iv.MaxItemsPerColumn)
+	iv.Columns = int32(math.Ceil(cols))
+
+	iv.ActiveColumn = iv.ActiveItem / iv.MaxItemsPerColumn
+	iv.ActiveViewportColumn = iv.ActiveColumn
+	if iv.ActiveColumn >= iv.MaxViewportColumns {
+		iv.ActiveViewportColumn = iv.MaxViewportColumns - 1
+	}
+
+	iv.ScrollOffset = -(iv.ActiveColumn + 1 - iv.MaxViewportColumns) * iv.ItemWidth
+	if iv.ScrollOffset > 0 {
+		iv.ScrollOffset = 0
+	}
+
 	iv.Scrollbar.Resize(sdl.Rect{X: rect.X, Y: rect.Y + rect.H - 8, W: rect.W, H: 8})
 }
 
