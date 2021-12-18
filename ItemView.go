@@ -117,6 +117,9 @@ func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
 	result.NormalKeyMap['x'] = append(result.NormalKeyMap['x'], Shortcut{Ctrl: true, Alt: false, Callback: func() {
 		result.ExtractFilesFromFolder()
 	}})
+	result.NormalKeyMap['X'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.DeleteActiveForced()
+	}}}
 	result.NormalKeyMap['y'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
 		if result.getSelectedItemsCount() == 0 {
 			result.CopyActive(true)
@@ -450,6 +453,29 @@ func (iv *ItemView) DeleteActive() {
 	lastActive := iv.ActiveItem
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
+	iv.ShowFolder(iv.CurrentPath)
+
+	iv.ActiveItem = lastActive
+	if iv.ActiveItem >= int32(len(iv.Items)) && len(iv.Items) > 0 {
+		iv.ActiveItem = int32(len(iv.Items)) - 1
+	} else if len(iv.Items) == 0 {
+		iv.ActiveItem = -1
+	}
+}
+
+func (iv *ItemView) DeleteActiveForced() {
+	if iv.ActiveItem < 0 || iv.ActiveItem >= int32(len(iv.Items)) {
+		return
+	}
+
+	err := os.RemoveAll(path.Join(iv.CurrentPath, iv.Items[iv.ActiveItem].Name))
+	if err != nil {
+		NotifyError(err.Error())
+		return
+	}
+
+	lastActive := iv.ActiveItem
+
 	iv.ShowFolder(iv.CurrentPath)
 
 	iv.ActiveItem = lastActive
