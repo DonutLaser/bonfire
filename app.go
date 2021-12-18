@@ -33,7 +33,7 @@ type App struct {
 	WindowRects []sdl.Rect
 
 	Breadcrumbs  []Breadcrumbs
-	ItemViews    []ItemView
+	ItemViews    []*ItemView
 	QuickOpen    QuickOpen
 	Notification Notification
 	InfoViews    []InfoView
@@ -43,6 +43,8 @@ type App struct {
 	LastError NotificationEvent
 	Settings
 	Renderer *sdl.Renderer
+
+	NormalKeyMap map[byte]Shortcut
 }
 
 func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (result *App) {
@@ -58,7 +60,7 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	result.WindowRects = []sdl.Rect{{X: 0, Y: 0, W: windowWidth, H: windowHeight}}
 
 	result.Breadcrumbs = []Breadcrumbs{*NewBreadcrumbs(sdl.Rect{X: 0, Y: 0, W: windowWidth, H: 28}, result.AvailabelDrives)}
-	result.ItemViews = []ItemView{*NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, result)}
+	result.ItemViews = []*ItemView{NewItemView(sdl.Rect{X: 0, Y: 28, W: windowWidth, H: windowHeight - 28}, result)}
 	// Only the width matters here, because the position is relative to parent component and height is dynamic
 	result.QuickOpen = *NewQuickOpen(sdl.Rect{X: 0, Y: 0, W: 394, H: 0})
 	result.Notification = *NewNotification()
@@ -77,6 +79,30 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32) (resu
 	globalNotificationHandler = func(e NotificationEvent) {
 		result.ShowNotification(e)
 	}
+
+	result.NormalKeyMap = map[byte]Shortcut{}
+	result.NormalKeyMap[':'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
+		result.Mode = Mode_Drive_Selection
+		result.Breadcrumbs[result.ActiveView].ShowAvailableDrives(true)
+	}}
+	result.NormalKeyMap['e'] = Shortcut{Ctrl: false, Alt: true, Callback: func() {
+		result.ShowNotification(result.LastError)
+	}}
+	result.NormalKeyMap['.'] = Shortcut{Ctrl: true, Alt: true, Callback: func() {
+		result.SelectTheme(result.AvailableThemes)
+	}}
+	result.NormalKeyMap['}'] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.AddView()
+	}}
+	result.NormalKeyMap['{'] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.RemoveView()
+	}}
+	result.NormalKeyMap[']'] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.GoToNextView()
+	}}
+	result.NormalKeyMap['['] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.GoToPrevView()
+	}}
 
 	return
 }
@@ -146,33 +172,10 @@ func (app *App) handleInputNormal(input *Input) {
 		return
 	}
 
-	switch input.TypedCharacter {
-	case ':':
-		app.Mode = Mode_Drive_Selection
-		app.Breadcrumbs[app.ActiveView].ShowAvailableDrives(true)
-	case 'e':
-		if input.Alt {
-			app.ShowNotification(app.LastError)
-		}
-	case '.':
-		if input.Ctrl && input.Alt {
-			app.SelectTheme(app.AvailableThemes)
-		}
-	case '}':
-		if input.Ctrl && input.Shift {
-			app.AddView()
-		}
-	case '{':
-		if input.Ctrl && input.Shift {
-			app.RemoveView()
-		}
-	case ']':
-		if input.Ctrl {
-			app.GoToNextView()
-		}
-	case '[':
-		if input.Ctrl {
-			app.GoToPrevView()
+	shortcut, ok := app.NormalKeyMap[input.TypedCharacter]
+	if ok {
+		if input.Ctrl == shortcut.Ctrl && input.Alt == shortcut.Alt {
+			shortcut.Callback()
 		}
 	}
 }
@@ -293,7 +296,7 @@ func (app *App) AddView() {
 		app.ItemViews[i].Resize(sdl.Rect{X: singleWidth * i, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28})
 	}
 	app.Breadcrumbs = append(app.Breadcrumbs, *NewBreadcrumbs(sdl.Rect{X: singleWidth * app.ViewCount, Y: 0, W: singleWidth, H: 28}, app.AvailabelDrives))
-	app.ItemViews = append(app.ItemViews, *NewItemView(sdl.Rect{X: singleWidth * app.ViewCount, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28}, app))
+	app.ItemViews = append(app.ItemViews, NewItemView(sdl.Rect{X: singleWidth * app.ViewCount, Y: 28, W: singleWidth, H: app.WindowRects[0].H - 28}, app))
 	app.InfoViews = append(app.InfoViews, *NewInfoView())
 	app.Previews = append(app.Previews, *NewPreview())
 

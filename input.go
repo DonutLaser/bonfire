@@ -14,3 +14,9 @@ func (input *Input) Clear() {
 	input.Backspace = false
 	input.Escape = false
 }
+
+type Shortcut struct {
+	Ctrl     bool
+	Alt      bool
+	Callback func()
+}

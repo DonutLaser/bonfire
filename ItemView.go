@@ -64,10 +64,13 @@ type ItemView struct {
 	ConsumingInput bool
 	SelectionMode  bool
 	SelectionStart int32
+
+	NormalKeyMap map[byte][]Shortcut
+	GotoKeyMap   map[byte]Shortcut
 }
 
-func NewItemView(rect sdl.Rect, app *App) *ItemView {
-	return &ItemView{
+func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
+	result = &ItemView{
 		ActiveItem:        -1,
 		ActiveColumn:      0,
 		Rect:              rect,
@@ -78,6 +81,96 @@ func NewItemView(rect sdl.Rect, app *App) *ItemView {
 		Mode:              Mode_Normal,
 		Input:             NewInlineInputField(),
 	}
+
+	result.NormalKeyMap = map[byte][]Shortcut{}
+	result.NormalKeyMap['h'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateLeft()
+	}}}
+	result.NormalKeyMap['j'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateDown()
+	}}}
+	result.NormalKeyMap['k'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateUp()
+	}}}
+	result.NormalKeyMap['l'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateRight()
+	}}}
+	result.NormalKeyMap['G'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateLastInColumn()
+	}}}
+	result.NormalKeyMap['g'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.Mode = Mode_Goto
+	}}}
+	result.NormalKeyMap['g'] = append(result.NormalKeyMap['g'], Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.GroupSelectedFiles()
+	}})
+	result.NormalKeyMap['*'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.MarkActiveAsFavorite()
+	}}}
+	result.NormalKeyMap['x'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		if result.getSelectedItemsCount() == 0 {
+			result.DeleteActive()
+		} else {
+			result.DeleteSelected()
+		}
+	}}}
+	result.NormalKeyMap['y'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		if result.getSelectedItemsCount() == 0 {
+			result.CopyActive(true)
+		} else {
+			// result.CopySelected()
+		}
+	}}}
+	result.NormalKeyMap['p'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.Paste()
+	}}}
+	result.NormalKeyMap['D'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.DuplicateActive()
+	}}}
+	result.NormalKeyMap['r'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.RenameActive()
+	}}}
+	result.NormalKeyMap['v'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.SelectActive()
+	}}}
+	result.NormalKeyMap['V'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.StartSelection()
+	}}}
+	result.NormalKeyMap['a'] = []Shortcut{{Ctrl: true, Alt: false, Callback: func() {
+		result.SelectAll(true)
+	}}}
+	result.NormalKeyMap['i'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.CreateNewFile()
+	}}}
+	result.NormalKeyMap['I'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.CreateNewFolder(true, true)
+	}}}
+	result.NormalKeyMap['`'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.App.SelectFavorite(result.favoritesToPaths())
+	}}}
+	result.NormalKeyMap['/'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.App.FindInCurrentFolder(result.itemsToNames())
+	}}}
+	result.NormalKeyMap['H'] = []Shortcut{{Ctrl: false, Alt: false, Callback: func() {
+		result.ShowHidden = !result.ShowHidden
+		result.ShowFolder(result.CurrentPath)
+	}}}
+
+	result.GotoKeyMap = map[byte]Shortcut{}
+	result.GotoKeyMap['d'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
+		result.OpenItem(result.Items[result.ActiveItem].Name)
+	}}
+	result.GotoKeyMap['g'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
+		result.NavigateFirstInColumn()
+	}}
+	result.GotoKeyMap['h'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
+		result.App.ShowFileInfo(result.GetActiveFileInfo())
+	}}
+	result.GotoKeyMap['y'] = Shortcut{Ctrl: false, Alt: false, Callback: func() {
+		result.App.ShowPreview(result.CurrentPath, result.Items[result.ActiveItem].Name)
+	}}
+
+	return
 }
 
 func (iv *ItemView) SetActiveByName(name string) {
@@ -578,7 +671,7 @@ func (iv *ItemView) CreateNewFile() {
 	iv.RenameActive()
 }
 
-func (iv *ItemView) CreateNewFolder(updateView bool) string {
+func (iv *ItemView) CreateNewFolder(updateView bool, rename bool) string {
 	success, name := CreateNewFolder(iv.CurrentPath, "New Folder")
 	if !success {
 		return ""
@@ -590,7 +683,9 @@ func (iv *ItemView) CreateNewFolder(updateView bool) string {
 	}
 
 	iv.SetActiveByName(name)
-	iv.RenameActive()
+	if rename {
+		iv.RenameActive()
+	}
 
 	return name
 }
@@ -600,7 +695,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 		return
 	}
 
-	newFolderName := iv.CreateNewFolder(false)
+	newFolderName := iv.CreateNewFolder(false, false)
 
 	for i := 0; i < len(iv.Items); i++ {
 		if !iv.Items[i].IsSelected {
@@ -620,6 +715,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 
 	iv.ShowFolder(iv.CurrentPath)
 	iv.SetActiveByName(newFolderName)
+	iv.RenameActive()
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
@@ -653,62 +749,14 @@ func (iv *ItemView) Tick(input *Input) {
 		return
 	}
 
-	switch input.TypedCharacter {
-	case 'h':
-		iv.NavigateLeft()
-	case 'j':
-		iv.NavigateDown()
-	case 'k':
-		iv.NavigateUp()
-	case 'l':
-		iv.NavigateRight()
-	case 'G':
-		iv.NavigateLastInColumn()
-	case 'g':
-		if input.Ctrl {
-			iv.GroupSelectedFiles()
-		} else {
-			iv.Mode = Mode_Goto
+	shortcut, ok := iv.NormalKeyMap[input.TypedCharacter]
+	if ok {
+		for _, s := range shortcut {
+			if input.Ctrl == s.Ctrl && input.Alt == s.Alt {
+				s.Callback()
+				break
+			}
 		}
-	case '*':
-		iv.MarkActiveAsFavorite()
-	case 'x':
-		if iv.getSelectedItemsCount() == 0 {
-			iv.DeleteActive()
-		} else {
-			iv.DeleteSelected()
-		}
-	case 'y':
-		if iv.getSelectedItemsCount() == 0 {
-			iv.CopyActive(true)
-		} else {
-			// iv.CopySelected()
-		}
-	case 'p':
-		iv.Paste()
-	case 'D':
-		iv.DuplicateActive()
-	case 'r':
-		iv.RenameActive()
-	case 'v':
-		iv.SelectActive()
-	case 'V':
-		iv.StartSelection()
-	case 'a':
-		if input.Ctrl {
-			iv.SelectAll(true)
-		}
-	case 'i':
-		iv.CreateNewFile()
-	case 'I':
-		iv.CreateNewFolder(true)
-	case '`':
-		iv.App.SelectFavorite(iv.favoritesToPaths())
-	case '/':
-		iv.App.FindInCurrentFolder(iv.itemsToNames())
-	case 'H':
-		iv.ShowHidden = !iv.ShowHidden
-		iv.ShowFolder(iv.CurrentPath)
 	}
 }
 
@@ -722,22 +770,14 @@ func (iv *ItemView) handleInputGoto(input *Input) {
 		return
 	}
 
-	switch input.TypedCharacter {
-	case 'd':
-		iv.OpenItem(iv.Items[iv.ActiveItem].Name)
-		iv.Mode = Mode_Normal
-	case 'g':
-		iv.App.ItemViews[iv.App.ActiveView].NavigateFirstInColumn()
-		iv.Mode = Mode_Normal
-	case 'h':
-		iv.App.ShowFileInfo(iv.GetActiveFileInfo())
-		iv.Mode = Mode_Normal
-	case 'y':
-		iv.App.ShowPreview(iv.CurrentPath, iv.Items[iv.ActiveItem].Name)
-		iv.Mode = Mode_Normal
-	default:
-		iv.Mode = Mode_Normal
+	shortcut, ok := iv.GotoKeyMap[input.TypedCharacter]
+	if ok {
+		if input.Ctrl == shortcut.Ctrl && input.Alt == shortcut.Alt {
+			shortcut.Callback()
+		}
 	}
+
+	iv.Mode = Mode_Normal
 }
 
 func (iv *ItemView) Render(renderer *sdl.Renderer, app *App, active bool) {
