@@ -406,7 +406,8 @@ func (app *App) Render() {
 	}
 
 	if app.Notification.IsOpen {
-		app.Notification.Render(app.Renderer, app)
+		fullRect := sdl.Rect{X: 0, Y: 0, W: app.WindowRects[0].W * app.ViewCount, H: app.WindowRects[0].H}
+		app.Notification.Render(app.Renderer, &fullRect, app)
 	}
 
 	for i := int32(0); i < app.ViewCount; i++ {
