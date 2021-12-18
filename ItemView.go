@@ -62,6 +62,8 @@ type ItemView struct {
 	SelectionMode  bool
 	SelectionStart int32
 
+	Scrollbar Scrollbar
+
 	NormalKeyMap map[byte][]Shortcut
 	GotoKeyMap   map[byte]Shortcut
 }
@@ -78,6 +80,7 @@ func NewItemView(rect sdl.Rect, app *App) (result *ItemView) {
 		App:                app,
 		Mode:               Mode_Normal,
 		Input:              NewInlineInputField(),
+		Scrollbar:          *NewScrollbar(sdl.Rect{X: rect.X, Y: rect.Y + rect.H - 8, W: rect.W, H: 8}),
 	}
 
 	result.NormalKeyMap = map[byte][]Shortcut{}
@@ -797,6 +800,8 @@ func (iv *ItemView) Resize(rect sdl.Rect) {
 	iv.Rect = rect
 	iv.MaxItemsPerColumn = rect.H / iv.ItemHeight
 	iv.MaxViewportColumns = rect.W / iv.ItemWidth
+
+	iv.Scrollbar.Resize(sdl.Rect{X: rect.X, Y: rect.Y + rect.H - 8, W: rect.W, H: 8})
 }
 
 func (iv *ItemView) Tick(input *Input) {
@@ -957,5 +962,9 @@ func (iv *ItemView) Render(renderer *sdl.Renderer, app *App, active bool) {
 
 			itemIndex++
 		}
+	}
+
+	if iv.Columns > iv.MaxViewportColumns {
+		iv.Scrollbar.Render(renderer, iv.ActiveColumn, iv.Columns, iv.App)
 	}
 }
