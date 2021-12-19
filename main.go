@@ -195,10 +195,6 @@ func main() {
 					if t.State != sdl.RELEASED {
 						input.Escape = true
 					}
-				case sdl.K_F11:
-					if t.State != sdl.RELEASED {
-						input.F11 = true
-					}
 				default:
 					if t.State != sdl.RELEASED {
 						input.TypedCharacter = keyToCharacter(keycode, t.Keysym.Mod)
