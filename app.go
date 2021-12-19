@@ -10,7 +10,6 @@ import (
 
 // @TODO (!important) copy files and folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
-// @TODO (!important) make sure changes in the directory that are made outside the app are automatically reflected in the app
 
 type Mode int32
 
@@ -118,6 +117,9 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32, platf
 	}}
 	result.NormalKeyMap[' '] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
 		result.PlatformLayer.ToggleMaximizeWindow()
+	}}
+	result.NormalKeyMap['r'] = Shortcut{Ctrl: true, Alt: false, Callback: func() {
+		result.ItemViews[result.ActiveView].Refresh()
 	}}
 
 	return
