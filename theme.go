@@ -113,7 +113,7 @@ func GetString(subtheme Subtheme, key string) string {
 		return value.(string)
 	}
 
-	return " > "
+	return ""
 }
 
 func getKeyValue(text string) (key string, value string) {

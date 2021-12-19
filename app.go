@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"path"
 	"strings"
 	"unicode"
@@ -61,7 +62,6 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32, platf
 	result = &App{}
 
 	result.Font = LoadFont("assets/fonts/consolab.ttf", 12)
-	result.FavoriteIcon = LoadImage("assets/images/favorite.png", renderer)
 	result.AvailableThemes = GetAvailableThemes()
 	result.AvailabelDrives = GetAvailableDrives()
 
@@ -83,6 +83,14 @@ func NewApp(renderer *sdl.Renderer, windowWidth int32, windowHeight int32, platf
 	result.Renderer = renderer
 
 	result.Theme = *LoadTheme(result.Settings.ThemeName)
+
+	icon := GetString(result.Theme.ItemViewTheme, "favorite_icon")
+	favoriteIconPath := "assets/images/favorite.png"
+	if icon != "" {
+		favoriteIconPath = path.Join("assets/images/", icon)
+		fmt.Println(favoriteIconPath)
+	}
+	result.FavoriteIcon = LoadImage(favoriteIconPath, renderer)
 
 	result.ItemViews[result.ActiveView].SetFavorites(result.Settings.Favorites)
 
@@ -248,6 +256,15 @@ func (app *App) SelectTheme(themes []string) {
 	app.QuickOpen.Open(themes, func(theme string) {
 		app.Theme = *LoadTheme(theme)
 		app.Settings.SetTheme(theme)
+
+		icon := GetString(app.Theme.ItemViewTheme, "favorite_icon")
+		if icon != "" {
+			app.FavoriteIcon.Unload()
+			app.FavoriteIcon = LoadImage(path.Join("assets/images/", icon), app.Renderer)
+		} else {
+			app.FavoriteIcon.Unload()
+			app.FavoriteIcon = LoadImage("assets/images/favorite.png", app.Renderer)
+		}
 	})
 }
 

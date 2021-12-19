@@ -79,6 +79,9 @@ func (b *Breadcrumbs) Render(renderer *sdl.Renderer, font *Font, theme Subtheme)
 		DrawText(renderer, font, drives, &drivesRect, GetColor(theme, "path_color"))
 	} else if len(b.Path) > 0 {
 		symbol := GetString(theme, "separator_symbol")
+		if symbol == "" {
+			symbol = " > "
+		}
 
 		fullPath := strings.Join(b.Path, symbol)
 		pathWidth := font.GetStringWidth(fullPath)

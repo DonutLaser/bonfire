@@ -1,0 +1,53 @@
+@Breadcrumbs
+background_color = 29 29 29 
+path_color = 202 68 72 
+separator_color = 169 120 120 
+
+@ItemView
+background_color = 29 29 29 
+folder_color = 202 68 72 
+file_color = 197 196 196 
+hidden_color = 66 65 65
+active_folder_color = 246 0 20
+active_file_color = 255 255 255
+active_background_border = 169 120 120 
+inactive_background_border = 75 75 75
+selected_folder_color = 246 0 20
+selected_file_color = 255 255 255
+selected_background_color = 195 42 49
+favorite_icon_color = 223 0 31
+favorite_icon = "heart.png"
+
+@InputField
+background_color = 29 29 29 
+inset_color = 20 20 20 
+text_color = 197 196 196 
+cursor_color = 202 68 72 
+
+@QuickOpen
+background_color = 29 29 29 
+item_color = 197 196 196 
+active_item_color = 255 255 255
+active_item_background_color = 169 120 120 
+
+@Notification
+background_color = 29 29 29 
+error_color = 223 0 31
+warning_color = 220 165 42
+info_color = 113 190 72
+
+@InfoView
+background_color = 29 29 29 
+inset_color = 20 20 20 
+header_color = 202 68 72 
+info_color = 197 196 196 
+
+@Preview
+background_color = 29 29 29 
+inset_color = 20 20 20 
+header_color = 202 68 72 
+text_color = 197 196 196 
+
+@Scrollbar
+handle_color = 29 29 29 
+inset_color = 20 20 20 
