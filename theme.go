@@ -8,8 +8,6 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 )
 
-// @TODO (!important) support custom icons
-
 type Subtheme map[string]interface{}
 
 type Theme struct {
