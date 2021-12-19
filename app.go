@@ -9,7 +9,6 @@ import (
 )
 
 // @TODO (!important) copy files and folders
-// @TODO have icons next to files/folders
 // @TODO (!important) lazy initialize compnents that are not needed right away
 // @TODO (!important) make sure changes in the directory that are made outside the app are automatically reflected in the app
 
@@ -397,6 +396,14 @@ func (app *App) MoveItemToPrevView(name string, directory string, itemType ItemT
 
 	app.Copy(name, directory, itemType)
 	app.ItemViews[app.ActiveView].Paste()
+}
+
+func (app *App) RefreshOtherViews(fullPath string) {
+	for i := int32(0); i < app.ViewCount; i++ {
+		if i != app.ActiveView && app.ItemViews[i].CurrentPath == fullPath {
+			app.ItemViews[i].Refresh()
+		}
+	}
 }
 
 func (app *App) GetClipboard() *Clipboard {

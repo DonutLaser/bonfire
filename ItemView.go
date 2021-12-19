@@ -274,6 +274,10 @@ func (iv *ItemView) ShowFolder(fullPath string) bool {
 	return true
 }
 
+func (iv *ItemView) Refresh() {
+	iv.ShowFolder(iv.CurrentPath)
+}
+
 func (iv *ItemView) GetActiveFileInfo() (result Info) {
 	item := iv.Items[iv.ActiveItem]
 
@@ -480,6 +484,7 @@ func (iv *ItemView) DeleteActive() {
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 
 	iv.ActiveItem = lastActive
 	if iv.ActiveItem >= int32(len(iv.Items)) && len(iv.Items) > 0 {
@@ -503,6 +508,7 @@ func (iv *ItemView) DeleteActiveForced() {
 	lastActive := iv.ActiveItem
 
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 
 	iv.ActiveItem = lastActive
 	if iv.ActiveItem >= int32(len(iv.Items)) && len(iv.Items) > 0 {
@@ -529,6 +535,7 @@ func (iv *ItemView) DeleteSelected() {
 
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 }
 
 func (iv *ItemView) CopyActive(showNotification bool) {
@@ -551,6 +558,7 @@ func (iv *ItemView) Paste() {
 		}
 
 		iv.ShowFolder(iv.CurrentPath)
+		iv.App.RefreshOtherViews(iv.CurrentPath)
 		iv.SetActiveByName(name)
 	}
 }
@@ -579,6 +587,8 @@ func (iv *ItemView) RenameActive() {
 			NotifyError(err.Error())
 			iv.Items[iv.ActiveItem].Name = oldName
 		}
+
+		iv.App.RefreshOtherViews(iv.CurrentPath)
 	}, func() {
 		iv.Items[iv.ActiveItem].RenameInProgress = false
 		iv.ConsumingInput = false
@@ -722,6 +732,7 @@ func (iv *ItemView) CreateNewFile() {
 
 	// // @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 	iv.SetActiveByName(name)
 	iv.RenameActive()
 }
@@ -735,6 +746,7 @@ func (iv *ItemView) CreateNewFolder(updateView bool, rename bool) string {
 	// @TODO (!important) not really efficient, better way would probably be to modify the existing items list instead of overriding it
 	if updateView {
 		iv.ShowFolder(iv.CurrentPath)
+		iv.App.RefreshOtherViews(iv.CurrentPath)
 	}
 
 	iv.SetActiveByName(name)
@@ -769,6 +781,7 @@ func (iv *ItemView) GroupSelectedFiles() {
 	iv.SelectionMode = false
 
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 	iv.SetActiveByName(newFolderName)
 	iv.RenameActive()
 }
@@ -794,6 +807,7 @@ func (iv *ItemView) ExtractFilesFromFolder() {
 
 	iv.DeleteActive()
 	iv.ShowFolder(iv.CurrentPath)
+	iv.App.RefreshOtherViews(iv.CurrentPath)
 }
 
 func (iv *ItemView) Resize(rect sdl.Rect) {
