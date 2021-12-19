@@ -178,20 +178,22 @@ func GetItemType(fullPath string) ItemType {
 }
 
 func GetFileType(filename string) FileType {
-	if strings.HasSuffix(filename, ".exe") {
+	lowercase := strings.ToLower(filename)
+
+	if strings.HasSuffix(lowercase, ".exe") {
 		return FileTypeExe
 	}
 
 	imageExtensions := []string{".png", ".jpg", ".jpeg", ".bmp", ".gif", ".ico"}
 	for _, ext := range imageExtensions {
-		if strings.HasSuffix(filename, ext) {
+		if strings.HasSuffix(lowercase, ext) {
 			return FileTypeImage
 		}
 	}
 
 	txtExtensions := []string{".txt", ".md"}
 	for _, ext := range txtExtensions {
-		if strings.HasSuffix(filename, ext) {
+		if strings.HasSuffix(lowercase, ext) {
 			return FileTypeText
 		}
 	}
